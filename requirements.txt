@@ -1,3 +1,4 @@
 django==4.2.2
 psycopg2==2.9.6
 django-environ==0.10.0
+django[bcrypt]
