@@ -1,4 +1,7 @@
-django==4.2.2
 psycopg2==2.9.6
 django-environ==0.10.0
-django[bcrypt]
+django[bcrypt]==4.2.2
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+markdown==3.4.3
+django-filter==23.2
