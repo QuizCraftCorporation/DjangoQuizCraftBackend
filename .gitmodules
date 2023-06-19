@@ -1,0 +1,3 @@
+[submodule "QuizGeneratorModel"]
+	path = QuizGeneratorModel
+	url = https://github.com/QuizCraftCorporation/QuizGeneratorModel.git
