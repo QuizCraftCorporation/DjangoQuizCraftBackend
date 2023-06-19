@@ -1,11 +1,7 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-
-from authorization.views import RegisterView, UserInfoView
+from quiz.views import QuizCreateView, QuizView
 
 urlpatterns = [
-    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('register/', RegisterView.as_view(), name="sign_up"),
-    path('user-me/', UserInfoView.as_view(), name='user_info'),
+    path('create/', QuizCreateView.as_view(), name='create_quiz'),
+    path('<int:id>/', QuizView.as_view(), name='get_quiz')
 ]

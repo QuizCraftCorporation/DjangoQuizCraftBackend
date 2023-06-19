@@ -1,3 +1,5 @@
+import random
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -23,10 +25,10 @@ class Topic(models.Model):
 
 
 class Material(models.Model):
-    name = models.CharField(_("material name"), max_length=60, null=False, blank=False)
+    name = models.CharField(_("material name"), max_length=60, null=False, blank=True)
     id = models.BigAutoField(verbose_name="material id", primary_key=True)
-    file_name = models.FileField(upload_to="materials/")
-    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name="topic")
+    file = models.FileField(upload_to="materials/")
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name="topic", null=True)
 
     class Meta:
         verbose_name = _("material")
@@ -36,9 +38,23 @@ class Material(models.Model):
 class Quiz(models.Model):
     name = models.TextField(blank=False, null=False)
     id = models.BigAutoField(verbose_name="quiz id", primary_key=True)
-    source_id = models.ForeignKey(to=Material, on_delete=models.CASCADE, verbose_name="source id")
-    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name="topic")
-    users = models.ManyToManyField(User)
+    source = models.ForeignKey(to=Material, on_delete=models.CASCADE, verbose_name="source id")
+    topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name="topic", null=True)
+    passed_users = models.ManyToManyField(User, through="Take")
+    creator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name="creator id", related_name="quizzes",
+                                null=True)
+
+    REQUIRED_FIELDS = ["name"]
+
+    def add_questions(self, model_questions):
+        for question in model_questions:
+            q = Question.objects.create(text=question[0], type_id=1, quiz=self)
+            options = [MCQOption.objects.create(text=option) for option in question[1]]
+            mcq = MCQQuestion.objects.create(question=q, answer=options[0])
+            random.shuffle(options)
+            for option in options:
+                mcq.options.add(option)
+            mcq.save()
 
     class Meta:
         verbose_name = _("quiz")
@@ -70,6 +86,7 @@ class Question(models.Model):
 
     id = models.BigAutoField(verbose_name="question id", primary_key=True)
     text = models.TextField(_("question text"))
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     type_id = models.PositiveSmallIntegerField(
         default=1,
         choices=QUESTION_TYPE
@@ -83,6 +100,8 @@ class Question(models.Model):
 class MCQOption(models.Model):
     text = models.CharField(_("option text"))
     id = models.AutoField(_("option id"), primary_key=True)
+    question = models.ForeignKey("MCQQuestion", on_delete=models.CASCADE, verbose_name="question", null=True,
+                                 related_name="options")
 
     class Meta:
         verbose_name = _("Multiple Choice Question option")
@@ -90,9 +109,9 @@ class MCQOption(models.Model):
 
 
 class MCQQuestion(models.Model):
-    id = models.BigAutoField(verbose_name="question id", primary_key=True)
-    answer = models.IntegerField(verbose_name="answer id")
-    options = models.ForeignKey(MCQOption, on_delete=models.CASCADE, verbose_name="options")
+    question = models.OneToOneField(Question, primary_key=True, verbose_name="question id", on_delete=models.CASCADE,
+                                    related_name='MCQQuestion')
+    answer = models.ForeignKey(MCQOption, verbose_name="answer id", on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = _("Multiple Choice Question")
@@ -100,7 +119,7 @@ class MCQQuestion(models.Model):
 
 
 class TrueFalseQuestion(models.Model):
-    id = models.BigAutoField(verbose_name="question id", primary_key=True)
+    id = models.BigIntegerField(verbose_name="question id", primary_key=True)
     answer = models.BooleanField(verbose_name="answer flag")
 
     class Meta:
@@ -109,7 +128,7 @@ class TrueFalseQuestion(models.Model):
 
 
 class OpenEndedQuestion(models.Model):
-    id = models.BigAutoField(verbose_name="question id", primary_key=True)
+    id = models.BigIntegerField(verbose_name="question id", primary_key=True)
     answer = models.TextField(verbose_name="open answer")
 
     class Meta:
@@ -127,7 +146,7 @@ class InsertionPosition(models.Model):
 
 
 class InsertionQuestion(models.Model):
-    id = models.BigAutoField(verbose_name="question id", primary_key=True)
+    id = models.BigIntegerField(verbose_name="question id", primary_key=True)
     insertion_text = models.TextField(verbose_name="text for insertion")
 
 
