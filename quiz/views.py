@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 
 # View class for registration
 from QuizGeneratorModel.quiz_generator import QuizGenerator
-from quiz.models import Material, Quiz, MCQQuestion
-from quiz.serializers import QuizCreateSerializer, MCQQuestionSerializer, QuizSerializer
+from quiz.models import Material, Quiz
+from quiz.serializers import QuizCreateSerializer, QuizSerializer
 
 
 class QuizCreateView(APIView):
