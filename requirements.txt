@@ -1,4 +1,4 @@
-psycopg2==2.9.6
+psycopg2-binary==2.9.6
 django-environ==0.10.0
 django[bcrypt]==4.2.2
 djangorestframework==3.14.0

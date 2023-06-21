@@ -86,7 +86,7 @@ class Question(models.Model):
 
     id = models.BigAutoField(verbose_name="question id", primary_key=True)
     text = models.TextField(_("question text"))
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, null=True)
     type_id = models.PositiveSmallIntegerField(
         default=1,
         choices=QUESTION_TYPE
@@ -109,8 +109,8 @@ class MCQOption(models.Model):
 
 
 class MCQQuestion(models.Model):
-    question = models.OneToOneField(Question, primary_key=True, verbose_name="question id", on_delete=models.CASCADE,
-                                    related_name='MCQQuestion')
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    related_name='mcq_question', primary_key=True, default=0)
     answer = models.ForeignKey(MCQOption, verbose_name="answer id", on_delete=models.PROTECT)
 
     class Meta:

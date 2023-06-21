@@ -1,5 +1,5 @@
 from django.urls import path
-from quiz.views import QuizCreateView, QuizView, GetIndex
+from quiz.views import QuizCreateView, QuizView
 
 urlpatterns = [
     path('create/', QuizCreateView.as_view(), name='create_quiz'),
