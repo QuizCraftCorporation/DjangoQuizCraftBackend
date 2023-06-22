@@ -26,7 +26,7 @@ class QuizSerializer(serializers.ModelSerializer):
     def get_questions(self, obj: Quiz):
         all_questions = obj.question_set.all()
         questions = [
-            MCQQuestionSerializer(question.MCQQuestion).data
+            MCQQuestionSerializer(question.mcq_question).data
             for question in all_questions
         ]
         return questions
@@ -67,4 +67,3 @@ class MCQQuestionSerializer(serializers.ModelSerializer):
 
     def get_answer(self, obj):
         return obj.answer.text
-
