@@ -20,7 +20,7 @@ class QuizCreateView(APIView):
         name = serializer.validated_data["quiz_name"]
         quiz = Quiz.objects.create(name=name, source=material, creator=request.user)
         quiz_gen = QuizGenerator(debug=False)
-        result = quiz_gen.create_questions_from_file(str(material.file.file))
+        result = quiz_gen.create_questions_from_files([str(material.file.file)])
         quiz.add_questions(result)
         return Response(QuizSerializer(quiz).data)
 
