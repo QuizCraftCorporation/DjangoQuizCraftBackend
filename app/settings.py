@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     "quiz",
 ]
 
+CORS_ORIGIN_ALLOW_ALL = int(env('CORS_ALLOW_ALL', default=1))
+CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(" ") if not CORS_ORIGIN_ALLOW_ALL else []
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
