@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 # View class for registration
 from QuizGeneratorModel.quiz_craft_package.quiz_generator import QuizGenerator
 from quiz.models import Material, Quiz
-from quiz.serializers import QuizCreateSerializer, QuizSerializer
+from quiz.serializers import QuizCreateSerializer, QuizSerializer, QuizAnswersSerializer
 
 
 class QuizCreateView(APIView):
@@ -29,3 +29,9 @@ class QuizView(APIView):
     def get(self, request, id):
         quiz = Quiz.objects.get(id=id)
         return Response(QuizSerializer(quiz).data)
+
+
+class QuizAnswersView(APIView):
+    def get(self, request, id):
+        quiz = Quiz.objects.get(id=id)
+        return Response(QuizAnswersSerializer(quiz).data)
