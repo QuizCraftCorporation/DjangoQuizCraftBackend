@@ -35,6 +35,16 @@ class QuizSerializer(serializers.ModelSerializer):
         return obj.name
 
 
+class QuizAnswersSerializer(QuizSerializer):
+    def get_questions(self, obj: Quiz):
+        all_questions = obj.question_set.all()
+        questions = [
+            MCQQuestionAnswersSerializer(question.mcq_question).data
+            for question in all_questions
+        ]
+        return questions
+
+
 class MCQQuestionOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MCQOption
@@ -50,11 +60,10 @@ class QuestionSerializer(serializers.ModelSerializer):
 class MCQQuestionSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
     question = QuestionSerializer(read_only=True)
-    answer = serializers.SerializerMethodField()
 
     class Meta:
         model = MCQQuestion
-        fields = ["question", "options", "answer"]
+        fields = ["question", "options"]
 
     def get_options(self, obj):
         all_options = obj.options.all()
@@ -64,6 +73,14 @@ class MCQQuestionSerializer(serializers.ModelSerializer):
         ]
         random.shuffle(options)
         return options
+
+
+class MCQQuestionAnswersSerializer(MCQQuestionSerializer):
+    answer = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MCQQuestion
+        fields = ["question", "options", "answer"]
 
     def get_answer(self, obj):
         return obj.answer.text
