@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from datetime import timedelta
 from pathlib import Path
 import environ
+
 env = environ.Env()
 environ.Env.read_env()
 
@@ -41,8 +42,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
-    'rest_framework_simplejwt',
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "authorization",
     "quiz",
 ]
@@ -68,10 +70,15 @@ REST_FRAMEWORK = {
 
 # Simple JWT settings
 SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "SIGNING_KEY": open(env('PRIVATE_KEY_PATH')).read(),
+    "VERIFYING_KEY": open(f"{env('PRIVATE_KEY_PATH')}.pub").read(),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
-  }
+}
 
 TEMPLATES = [
     {
