@@ -43,8 +43,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
-    'rest_framework_simplejwt',
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "authorization",
     'corsheaders',
     "quiz",
@@ -75,10 +76,15 @@ REST_FRAMEWORK = {
 
 # Simple JWT settings
 SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "SIGNING_KEY": open(env('PRIVATE_KEY_PATH', default='jwtRS256.key')).read(),
+    "VERIFYING_KEY": open(f"{env('PRIVATE_KEY_PATH', default='jwtRS256.key')}.pub").read(),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
-  }
+}
 
 TEMPLATES = [
     {

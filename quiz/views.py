@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 # View class for registration
 from QuizGeneratorModel.quiz_craft_package.quiz_generator import QuizGenerator
 from quiz.models import Material, Quiz
-from quiz.serializers import QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, GetQuizSerializer
+from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, GetQuizSerializer
 
 
 class QuizCreateView(APIView):
@@ -34,6 +34,12 @@ class QuizView(APIView):
         return Response(QuizSerializer(quiz).data)
 
 
+class QuizAnswersView(APIView):
+    def get(self, request, id):
+        quiz = Quiz.objects.get(id=id)
+        return Response(QuizAnswersSerializer(quiz).data)
+
+
 class QuizEvaluate(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -41,3 +47,4 @@ class QuizEvaluate(APIView):
         serializer = QuizSubmissionSerializer(data=self.request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.save())
+
