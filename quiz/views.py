@@ -14,12 +14,15 @@ class QuizCreateView(APIView):
     def post(self, request):
         serializer = QuizCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        material = Material.objects.create(name=serializer.validated_data["source_name"],
-                                           file=serializer.validated_data["file"])
+        materials = []
         name = serializer.validated_data["quiz_name"]
-        quiz = Quiz.objects.create(name=name, source=material, creator=request.user)
+        quiz = Quiz.objects.create(name=name, creator=request.user)
+        for file in serializer.validated_data["files"]:
+            materials.append(Material.objects.create(name=serializer.validated_data["source_name"],
+                                                     file=file))
+            materials[-1].quiz_set.add(quiz)
         quiz_gen = QuizGenerator(debug=False)
-        result = quiz_gen.create_questions_from_files([str(material.file.file)])
+        result = quiz_gen.create_questions_from_files([str(material.file.file) for material in materials])
         quiz.add_questions(result)
         return Response(QuizSerializer(quiz).data)
 

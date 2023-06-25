@@ -38,7 +38,7 @@ class Material(models.Model):
 class Quiz(models.Model):
     name = models.TextField(blank=False, null=False)
     id = models.BigAutoField(verbose_name="quiz id", primary_key=True)
-    source = models.ForeignKey(to=Material, on_delete=models.CASCADE, verbose_name="source id")
+    source = models.ForeignKey(to=Material, on_delete=models.CASCADE, verbose_name="source id", null=True)
     topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name="topic", null=True)
     passed_users = models.ManyToManyField(User, through="Take")
     creator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name="creator id", related_name="quizzes",

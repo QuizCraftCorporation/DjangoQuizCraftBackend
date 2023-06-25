@@ -10,7 +10,7 @@ from .quiz_evaluation import MCQQuestionBinaryEvaluator
 class QuizCreateSerializer(serializers.Serializer):
     quiz_name = serializers.CharField()
     source_name = serializers.CharField()
-    file = serializers.FileField()
+    files = serializers.ListField(child=serializers.FileField())
 
     def update(self, instance, validated_data):
         instance.creator = self.context.get("request").user.id
