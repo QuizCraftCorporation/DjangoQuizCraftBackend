@@ -112,6 +112,7 @@ class UserAnswerSerializer(serializers.Serializer):
 
 class AnswerWithScoreSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
+    chosen_option_id = serializers.IntegerField()
     correct_answer_id = serializers.IntegerField()
     score = serializers.FloatField()
 
@@ -149,7 +150,7 @@ class QuizSubmissionSerializer(serializers.Serializer):
             score = MCQQuestionBinaryEvaluator.evaluate(question, answer.get("chosen_option_id"))
             total += score
             answer_with_score = {"question_id": answer.get("question_id"), "correct_answer_id": question_answer.id,
-                                 "score": score}
+                                 "score": score, "chosen_option_id": answer.get("chosen_option_id")}
             answers_with_score.append(answer_with_score)
         Take.objects.create(quiz=quiz, user=user, points=total)
         quiz_result_serializer = QuizResultSerializer(data={"scored_answers": answers_with_score,
