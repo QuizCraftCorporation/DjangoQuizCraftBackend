@@ -47,6 +47,7 @@ class Quiz(models.Model):
     REQUIRED_FIELDS = ["name"]
 
     def add_questions(self, model_questions):
+        mcqs = []
         for question in model_questions:
             q = Question.objects.create(text=question[0], type_id=1, quiz=self)
             options = [MCQOption.objects.create(text=option) for option in question[1]]
@@ -54,6 +55,9 @@ class Quiz(models.Model):
             random.shuffle(options)
             for option in options:
                 mcq.options.add(option)
+            mcqs.append(mcq)
+        random.shuffle(mcqs)
+        for mcq in mcqs:
             mcq.save()
 
     class Meta:
