@@ -17,6 +17,17 @@ class QuizCreateSerializer(serializers.Serializer):
         return instance
 
 
+class GetQuizSerializer(serializers.Serializer):
+    quiz_id = serializers.IntegerField()
+
+    def validate_quiz_id(self, value):
+        try:
+            # Check if the quiz with the given ID exists
+            Quiz.objects.get(id=value)
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError("Invalid quiz ID.")
+
+
 class QuizSerializer(serializers.ModelSerializer):
     questions = serializers.SerializerMethodField()
     title = serializers.SerializerMethodField()
