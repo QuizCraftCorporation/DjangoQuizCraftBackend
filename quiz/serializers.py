@@ -52,11 +52,11 @@ class QuestionSerializer(serializers.ModelSerializer):
 class MCQQuestionSerializer(serializers.ModelSerializer):
     options = serializers.SerializerMethodField()
     question = QuestionSerializer(read_only=True)
-    answer = serializers.SerializerMethodField()
+    answers = serializers.SerializerMethodField()
 
     class Meta:
         model = MCQQuestion
-        fields = ["question", "options", "answer"]
+        fields = ["question", "options", "answers"]
 
     @staticmethod
     def get_options(obj):
@@ -69,14 +69,15 @@ class MCQQuestionSerializer(serializers.ModelSerializer):
         return options
 
     @staticmethod
-    def get_answer(obj):
-        return obj.answer.text
+    def get_answers(obj):
+        correct_option_ids = [option.id for option in obj.options.filter(correct__exact=True)]
+        return correct_option_ids
 
 
 class UserAnswerSerializer(serializers.Serializer):
     # Serializer for answer on a question
     question_id = serializers.IntegerField()
-    chosen_option_id = serializers.IntegerField()
+    chosen_option_ids = serializers.ListField(child=serializers.IntegerField())
 
     def run_validation(self, data=serializers.empty):
         if data is serializers.empty:
@@ -97,23 +98,24 @@ class UserAnswerSerializer(serializers.Serializer):
 
         return value
 
-    def validate_chosen_option_id(self, value):
+    def validate_chosen_option_ids(self, value):
         question_id = self.question_id
+        question = MCQQuestion.objects.get(pk=question_id)
+        question_option_set = set(question.options.all().values_list('id', flat=True))
         try:
-            # Check if the MCQOption with the given ID exists
-            option = MCQOption.objects.get(pk=value)
-            if option.question.question.id != question_id:
+            # Check if the MCQOptions with the given ID exists
+            if any(opt_id not in question_option_set for opt_id in value):
                 raise ObjectDoesNotExist
         except ObjectDoesNotExist:
-            raise serializers.ValidationError("Invalid chosen option ID.")
+            raise serializers.ValidationError("Invalid chosen option IDs.")
 
         return value
 
 
 class AnswerWithScoreSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
-    chosen_option_id = serializers.IntegerField()
-    correct_answer_id = serializers.IntegerField()
+    chosen_option_ids = serializers.ListField(child=serializers.IntegerField())
+    correct_answers_id = serializers.ListField(child=serializers.IntegerField())
     score = serializers.FloatField()
 
 
@@ -145,14 +147,24 @@ class QuizSubmissionSerializer(serializers.Serializer):
         total = 0
         answers_with_score = []
         for answer in validated_data.get('answers'):
-            question = MCQQuestion.objects.get(pk=answer.get("question_id"))
-            question_answer = question.answer
-            score = MCQQuestionBinaryEvaluator.evaluate(question, answer.get("chosen_option_id"))
+            question = \
+                MCQQuestion.objects.get(pk=answer.get("question_id"))
+            question_answers = [
+                option.id for option
+                in question.options.filter(correct__exact=True)
+            ]
+            evaluator = MCQQuestionBinaryEvaluator(set(question_answers))
+            score = evaluator.evaluate(answer.get("chosen_option_ids"))
             total += score
-            answer_with_score = {"question_id": answer.get("question_id"), "correct_answer_id": question_answer.id,
-                                 "score": score, "chosen_option_id": answer.get("chosen_option_id")}
+            answer_with_score = {
+                "question_id": answer.get("question_id"),
+                "correct_answer_ids": question_answers,
+                "score": score,
+                "chosen_option_ids": answer.get("chosen_option_ids")
+            }
             answers_with_score.append(answer_with_score)
-        Take.objects.create(quiz=quiz, user=user, points=total)
+        take = Take(quiz=quiz, user=user, points=total)
+        take.save()
         quiz_result_serializer = QuizResultSerializer(data={"scored_answers": answers_with_score,
                                                             "quiz_id": validated_data.get("quiz_id"),
                                                             "total_score": total})
