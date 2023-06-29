@@ -90,11 +90,11 @@ class MCQQuestionSerializer(serializers.ModelSerializer):
 
 
 class MCQQuestionAnswersSerializer(MCQQuestionSerializer):
-    answer = serializers.SerializerMethodField()
+    answers = serializers.SerializerMethodField()
 
     class Meta:
         model = MCQQuestion
-        fields = ["question", "options", "answer"]
+        fields = ["question", "options", "answers"]
 
     @staticmethod
     def get_answers(obj):
