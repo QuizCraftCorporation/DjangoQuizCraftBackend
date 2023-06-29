@@ -38,7 +38,7 @@ class Material(models.Model):
 class Quiz(models.Model):
     name = models.TextField(blank=False, null=False)
     id = models.BigAutoField(verbose_name="quiz id", primary_key=True)
-    sources = models.ManyToManyField(to=Material, verbose_name="sources", null=True)
+    sources = models.ManyToManyField(to=Material, verbose_name="sources")
     topic = models.ForeignKey(to=Topic, on_delete=models.PROTECT, verbose_name="topic", null=True)
     passed_users = models.ManyToManyField(User, through="Take")
     creator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name="creator id", related_name="quizzes",
@@ -50,13 +50,18 @@ class Quiz(models.Model):
         mcqs = []
         for question in model_questions:
             q = Question.objects.create(text=question[0], type_id=1, quiz=self)
-            options = [MCQOption.objects.create(text=option) for option in question[1]]
-            mcq = MCQQuestion.objects.create(question=q, answer=options[0])
+            correct_options = set(question[2])
+            options = []
+            mcq = MCQQuestion.objects.create(question=q)
+            for i in range(len(question[1])):
+                correct = i in correct_options
+                options.append(MCQOption(text=question[1][i], correct=correct, question=mcq))
             random.shuffle(options)
             for option in options:
+                option.save()
                 mcq.options.add(option)
             mcqs.append(mcq)
-        random.shuffle(mcqs)
+
         for mcq in mcqs:
             mcq.save()
 
@@ -106,6 +111,7 @@ class MCQOption(models.Model):
     id = models.AutoField(_("option id"), primary_key=True)
     question = models.ForeignKey("MCQQuestion", on_delete=models.CASCADE, verbose_name="question", null=True,
                                  related_name="options")
+    correct = models.BooleanField(_("correct"), default=False)
 
     class Meta:
         verbose_name = _("Multiple Choice Question option")
@@ -115,7 +121,6 @@ class MCQOption(models.Model):
 class MCQQuestion(models.Model):
     question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
                                     related_name='mcq_question', primary_key=True, default=0)
-    answer = models.ForeignKey(MCQOption, verbose_name="answer id", on_delete=models.PROTECT)
 
     class Meta:
         verbose_name = _("Multiple Choice Question")

@@ -50,4 +50,3 @@ class QuizEvaluate(APIView):
         serializer = QuizSubmissionSerializer(data=self.request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         return Response(serializer.save())
-
