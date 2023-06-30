@@ -1,4 +1,5 @@
 import random
+from abc import abstractmethod
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -107,6 +108,20 @@ class Question(models.Model):
         verbose_name_plural = _("questions")
 
 
+class AbstractQuestion(models.Model):
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    primary_key=True, default=0)
+
+    class Meta:
+        abstract = True
+
+    @abstractmethod
+    def get_answer(self):
+        """
+        Get answer for current question.
+        """
+
+
 class MCQOption(models.Model):
     text = models.CharField(_("option text"))
     id = models.AutoField(_("option id"), primary_key=True)
@@ -119,15 +134,18 @@ class MCQOption(models.Model):
         verbose_name_plural = _("Multiple Choice Question options")
 
 
-class MCQQuestion(models.Model):
-    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
-                                    related_name='mcq_questions', primary_key=True, default=0)
-
+class MCQQuestion(AbstractQuestion):
     class Meta:
         verbose_name = _("Multiple Choice Question")
         verbose_name_plural = _("Multiple Choice Questions")
 
     def get_answer(self):
+        """
+        Get set of answer ids for MCQ question.
+
+        Returns:
+            set[int]: Set of answer ids.
+        """
         question_answers = {
             option.id for option
             in self.options.filter(correct__exact=True)
@@ -135,9 +153,7 @@ class MCQQuestion(models.Model):
         return question_answers
 
 
-class TrueFalseQuestion(models.Model):
-    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
-                                    related_name='true_false_questions', primary_key=True, default=0)
+class TrueFalseQuestion(AbstractQuestion):
     answer = models.BooleanField(verbose_name="answer flag")
 
     class Meta:
@@ -145,12 +161,16 @@ class TrueFalseQuestion(models.Model):
         verbose_name_plural = _("true/false questions")
 
     def get_answer(self):
+        """
+        Get answer flag for current true/false question.
+
+        Returns:
+            bool: Correct answer flag.
+        """
         return self.answer
 
 
-class OpenEndedQuestion(models.Model):
-    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
-                                    related_name='open_ended_questions', primary_key=True, default=0)
+class OpenEndedQuestion(AbstractQuestion):
     answer = models.TextField(verbose_name="open answer")
 
     class Meta:
@@ -158,6 +178,12 @@ class OpenEndedQuestion(models.Model):
         verbose_name_plural = _("opend ended questions")
 
     def get_answer(self):
+        """
+        Get answer text for current question.
+
+        Returns:
+            str: Answer text.
+        """
         return self.answer
 
 
@@ -170,15 +196,19 @@ class InsertionPosition(models.Model):
         unique_together = (('question', 'position'),)
 
 
-class InsertionQuestion(models.Model):
-    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
-                                    related_name='insertion_questions', primary_key=True, default=0)
+class InsertionQuestion(AbstractQuestion):
     insertion_text = models.TextField(verbose_name="text for insertion")
 
     def get_answer(self):
+        """
+        Get answer text for current question.
+
+        Returns:
+            list[str]: List of answers in correct order.
+        """
         answers = [
             insertion_answer.answer for insertion_answer
-            in self.insertion_answers.all()
+            in sorted(self.insertion_answers.all(), key=lambda x: x.position)
         ]
         return answers
 

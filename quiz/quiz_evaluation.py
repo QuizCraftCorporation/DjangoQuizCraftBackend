@@ -1,22 +1,24 @@
 from abc import ABC, abstractmethod
 
+from quiz.models import AbstractQuestion
+
 
 class QuestionEvaluator(ABC):
     """
     Abstract base class for question evaluators.
 
     Attributes:
-        answer : Correct answer on question.
+        answer : Question answer.
     """
 
-    def __init__(self, answer):
+    def __init__(self, question):
         """
         Initialize the question evaluator.
 
         Args:
-            answer : Correct answer on question.
+            AbstractQuestion : Question instance.
         """
-        self.answer = answer
+        self.answer = question.get_answer()
 
     @abstractmethod
     def evaluate(self, user_answer):
@@ -24,7 +26,7 @@ class QuestionEvaluator(ABC):
         Evaluate the user's answer.
 
         Args:
-            user_answer (set[int]): The user's answer.
+            user_answer: The user's answer.
 
         Returns:
             int: The score for the user's answer.
@@ -36,7 +38,49 @@ class MCQQuestionBinaryEvaluator(QuestionEvaluator):
     A question evaluator for multiple choice questions with binary answers.
 
     Attributes:
-        question (Question): The question to be evaluated.
+        answer : Question answer.
+    """
+
+    def evaluate(self, user_answer):
+        """
+        Evaluate the user's answer.
+
+        Args:
+            user_answer (set[int]): The user's answer.
+
+        Returns:
+            int: The score for the user's answer.
+        """
+        return int(self.answer == user_answer)
+
+
+class TrueFalseQuestionEvaluator(QuestionEvaluator):
+    """
+    A question evaluator for true/false questions.
+
+    Attributes:
+        answer : Question answer.
+    """
+
+    def evaluate(self, user_answer):
+        """
+        Evaluate the user's answer.
+
+        Args:
+            user_answer (bool): The user's answer.
+
+        Returns:
+            int: The score for the user's answer.
+        """
+        return int(self.answer == user_answer)
+
+
+class OpenEndedQuestionEvaluator(QuestionEvaluator):
+    """
+    A question evaluator for open-ended questions.
+
+    Attributes:
+        answer : Question answer.
     """
 
     def evaluate(self, user_answer):
@@ -49,6 +93,4 @@ class MCQQuestionBinaryEvaluator(QuestionEvaluator):
         Returns:
             int: The score for the user's answer.
         """
-        if all(answer in self.answer for answer in user_answer):
-            return 1
-        return 0
+        return int(self.answer == user_answer)
