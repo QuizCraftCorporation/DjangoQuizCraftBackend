@@ -1,3 +1,5 @@
+from django.http import JsonResponse
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -28,12 +30,14 @@ class QuizCreateView(APIView):
 
 
 class QuizView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": id})
         get_quiz_serializer.is_valid(raise_exception=True)
         quiz = Quiz.objects.get(id=id)
+        if quiz.private and quiz.creator != request.user:
+            return JsonResponse({"error": "This quiz is private and cannot be accessed by you."},
+                                status=status.HTTP_403_FORBIDDEN)
         return Response(QuizSerializer(quiz).data)
 
 
