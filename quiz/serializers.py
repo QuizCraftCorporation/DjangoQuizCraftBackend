@@ -48,6 +48,21 @@ class QuizSerializer(serializers.ModelSerializer):
         return obj.name
 
 
+class QuizMeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ['id', 'name']
+
+
+class QuizzesMeSerializer(serializers.Serializer):
+    quizzes = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_quizzes(obj):
+        db_quizzes = obj.quizzes.filter(ready__exact=True)
+        return [QuizMeSerializer(quiz).data for quiz in db_quizzes]
+
+
 class QuizAnswersSerializer(QuizSerializer):
     def get_questions(self, obj: Quiz):
         all_questions = obj.question_set.all()

@@ -7,7 +7,8 @@ from rest_framework.views import APIView
 # View class for registration
 from QuizGeneratorModel.quiz_craft_package.quiz_generator import QuizGenerator
 from quiz.models import Material, Quiz
-from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, GetQuizSerializer
+from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
+    GetQuizSerializer, QuizzesMeSerializer
 
 
 class QuizCreateView(APIView):
@@ -39,6 +40,14 @@ class QuizView(APIView):
             return JsonResponse({"error": "This quiz is private and cannot be accessed by you."},
                                 status=status.HTTP_403_FORBIDDEN)
         return Response(QuizSerializer(quiz).data)
+
+
+class QuizViewMe(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        quizzes_me_serializer = QuizzesMeSerializer(request.user)
+        return Response(quizzes_me_serializer.data)
 
 
 class QuizAnswersView(APIView):
