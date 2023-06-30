@@ -28,7 +28,6 @@ class QuizCreateView(APIView):
 
 
 class QuizView(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": id})
