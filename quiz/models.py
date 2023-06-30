@@ -121,29 +121,44 @@ class MCQOption(models.Model):
 
 class MCQQuestion(models.Model):
     question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
-                                    related_name='mcq_question', primary_key=True, default=0)
+                                    related_name='mcq_questions', primary_key=True, default=0)
 
     class Meta:
         verbose_name = _("Multiple Choice Question")
         verbose_name_plural = _("Multiple Choice Questions")
 
+    def get_answer(self):
+        question_answers = {
+            option.id for option
+            in self.options.filter(correct__exact=True)
+        }
+        return question_answers
+
 
 class TrueFalseQuestion(models.Model):
-    id = models.BigIntegerField(verbose_name="question id", primary_key=True)
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    related_name='true_false_questions', primary_key=True, default=0)
     answer = models.BooleanField(verbose_name="answer flag")
 
     class Meta:
         verbose_name = _("true/false question")
         verbose_name_plural = _("true/false questions")
 
+    def get_answer(self):
+        return self.answer
+
 
 class OpenEndedQuestion(models.Model):
-    id = models.BigIntegerField(verbose_name="question id", primary_key=True)
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    related_name='open_ended_questions', primary_key=True, default=0)
     answer = models.TextField(verbose_name="open answer")
 
     class Meta:
         verbose_name = _("open ended question")
         verbose_name_plural = _("opend ended questions")
+
+    def get_answer(self):
+        return self.answer
 
 
 class InsertionPosition(models.Model):
@@ -156,13 +171,21 @@ class InsertionPosition(models.Model):
 
 
 class InsertionQuestion(models.Model):
-    id = models.BigIntegerField(verbose_name="question id", primary_key=True)
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    related_name='insertion_questions', primary_key=True, default=0)
     insertion_text = models.TextField(verbose_name="text for insertion")
+
+    def get_answer(self):
+        answers = [
+            insertion_answer.answer for insertion_answer
+            in self.insertion_answers.all()
+        ]
+        return answers
 
 
 class InsertionAnswer(models.Model):
     question = models.ForeignKey(to=InsertionQuestion, verbose_name="question id", null=False,
-                                 on_delete=models.CASCADE)
+                                 on_delete=models.CASCADE, related_name="insertion_answers")
     answer = models.TextField(_("text to insert"))
     position = models.PositiveIntegerField(verbose_name="position offset", null=False)
 
