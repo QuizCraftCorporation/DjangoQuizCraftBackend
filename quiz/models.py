@@ -43,6 +43,7 @@ class Quiz(models.Model):
     passed_users = models.ManyToManyField(User, through="Take")
     creator = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name="creator id", related_name="quizzes",
                                 null=True)
+    private = models.BooleanField(default=False)
 
     REQUIRED_FIELDS = ["name"]
 
