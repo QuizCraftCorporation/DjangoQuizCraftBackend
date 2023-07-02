@@ -66,7 +66,7 @@ class QuizViewSet(ViewSet):
                                 status=status.HTTP_403_FORBIDDEN)
         if not quiz.ready:
             return JsonResponse({"detail": "This quiz is not ready yet."},
-                                status=status.HTTP_403_FORBIDDEN)
+                                status=status.HTTP_425_TOO_EARLY)
         if answer:
             quiz_serializer = QuizAnswersSerializer(quiz)  # Serializer for answer request
         else:
