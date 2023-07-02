@@ -229,6 +229,9 @@ class MCQQuestion(AbstractQuestion):
         verbose_name = _("Multiple Choice Question")
         verbose_name_plural = _("Multiple Choice Questions")
 
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    primary_key=True, default=0, related_name="mcq_question")
+
     def get_answer(self):
         """
         Get set of answer ids for MCQ question.
@@ -271,6 +274,10 @@ class TrueFalseQuestion(AbstractQuestion):
     class Meta:
         verbose_name = _("true/false question")
         verbose_name_plural = _("true/false questions")
+
+    question = models.OneToOneField(Question, verbose_name="question id", on_delete=models.CASCADE,
+                                    primary_key=True, default=0, related_name="true_false_question")
+    answer = models.BooleanField(verbose_name="answer flag")
 
     def get_answer(self):
         """
