@@ -69,7 +69,6 @@ class QuizViewSet(ViewSet):
 
     def retrieve(self, request, pk=None, **kwargs):
         answer = True if request.query_params.get('answer') else False
-        print(answer)
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
         quiz = Quiz.objects.get(pk=pk)
