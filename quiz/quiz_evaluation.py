@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from quiz.models import AbstractQuestion
-
 
 class QuestionEvaluator(ABC):
     """
@@ -11,14 +9,14 @@ class QuestionEvaluator(ABC):
         answer : Question answer.
     """
 
-    def __init__(self, question):
+    def __init__(self, answer):
         """
         Initialize the question evaluator.
 
         Args:
-            AbstractQuestion : Question instance.
+            answer : Question answer.
         """
-        self.answer = question.get_answer()
+        self.answer = answer
 
     @abstractmethod
     def evaluate(self, user_answer):
@@ -94,3 +92,26 @@ class OpenEndedQuestionEvaluator(QuestionEvaluator):
             int: The score for the user's answer.
         """
         return int(self.answer == user_answer)
+
+
+class InsertionQuestionEvaluator(QuestionEvaluator):
+    """
+    A question evaluator for insertion questions.
+
+    Attributes:
+        answer : Question answer.
+    """
+
+    def evaluate(self, user_answer):
+        """
+        Evaluate the user's answer.
+
+        Args:
+            user_answer (list[str]): The user's answer.
+
+        Returns:
+            int: The score for the user's answer.
+        """
+
+        return int(len(self.answer) == len(user_answer) and
+                   all(self.answer == answer for answer in user_answer))
