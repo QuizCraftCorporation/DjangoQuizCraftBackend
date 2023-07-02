@@ -13,6 +13,7 @@ from quiz.models import Material, Quiz
 from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
     GetQuizSerializer, QuizMeSerializer
 
+
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -23,7 +24,7 @@ class QuizViewSet(ViewSet):
         """
         Get list of quizzes for current user.
         """
-        queryset = request.user.quizzes.filter(ready__exact=True)
+        queryset = request.user.quizzes
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -55,7 +56,6 @@ class QuizViewSet(ViewSet):
         quiz.add_questions(result)
         return Response(QuizSerializer(quiz).data)
 
-
     def retrieve(self, request, pk=None, **kwargs):
         answer = True if request.query_params.get('answer') else False
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
@@ -63,6 +63,9 @@ class QuizViewSet(ViewSet):
         quiz = Quiz.objects.get(pk=pk)
         if quiz.private and quiz.creator != request.user:
             return JsonResponse({"detail": "This quiz is private and cannot be accessed by you."},
+                                status=status.HTTP_403_FORBIDDEN)
+        if not quiz.ready:
+            return JsonResponse({"detail": "This quiz is not ready yet."},
                                 status=status.HTTP_403_FORBIDDEN)
         if answer:
             quiz_serializer = QuizAnswersSerializer(quiz)  # Serializer for answer request
