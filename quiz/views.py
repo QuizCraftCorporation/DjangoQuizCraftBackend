@@ -1,28 +1,17 @@
-from django.contrib.auth.decorators import permission_required
 from django.http import JsonResponse
-from django.utils.decorators import method_decorator
-from rest_framework import status, mixins
+from rest_framework import status
 from rest_framework.decorators import action, permission_classes
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 # View class for registration
-from rest_framework.viewsets import ViewSet, GenericViewSet, ViewSetMixin
+from rest_framework.viewsets import ViewSet
 
 from QuizGeneratorModel.quiz_craft_package.quiz_generator import QuizGenerator
 from quiz.models import Material, Quiz
 from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
     GetQuizSerializer, QuizMeSerializer
-
-class QuizEvaluate(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        serializer = QuizSubmissionSerializer(data=self.request.data, context={'user': request.user})
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.save())
-
 
 class QuizViewSet(ViewSet):
     """
