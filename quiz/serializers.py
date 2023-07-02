@@ -3,17 +3,18 @@ import random
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
-from .models import MCQQuestion, MCQOption, Question, Quiz, Take
-from .quiz_evaluation import MCQQuestionBinaryEvaluator
+from .models import MCQQuestion, MCQOption, Question, Quiz, Take, TrueFalseQuestion
 
 
 class QuizCreateSerializer(serializers.Serializer):
     quiz_name = serializers.CharField()
     source_name = serializers.CharField()
+    max_questions = serializers.IntegerField(required=False)
     files = serializers.ListField(child=serializers.FileField())
 
     def update(self, instance, validated_data):
         instance.creator = self.context.get("request").user.id
+        instance.save()
         return instance
 
 
@@ -52,15 +53,6 @@ class QuizMeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = ['id', 'name']
-
-
-class QuizzesMeSerializer(serializers.Serializer):
-    quizzes = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_quizzes(obj):
-        db_quizzes = obj.quizzes.filter(ready__exact=True)
-        return [QuizMeSerializer(quiz).data for quiz in db_quizzes]
 
 
 class QuizAnswersSerializer(QuizSerializer):
@@ -109,7 +101,7 @@ class MCQQuestionAnswersSerializer(MCQQuestionSerializer):
 
     class Meta:
         model = MCQQuestion
-        fields = ["question", "options", "answers"]
+        fields = MCQQuestionSerializer.Meta.fields + ["answers"]
 
     @staticmethod
     def get_answers(obj):
@@ -117,10 +109,10 @@ class MCQQuestionAnswersSerializer(MCQQuestionSerializer):
         return correct_option_ids
 
 
-class UserAnswerSerializer(serializers.Serializer):
+class MCQUserAnswerSerializer(serializers.Serializer):
     # Serializer for answer on a question
     question_id = serializers.IntegerField()
-    chosen_option_ids = serializers.ListField(child=serializers.IntegerField())
+    user_answer = serializers.ListField(child=serializers.IntegerField())
 
     def run_validation(self, data=serializers.empty):
         if data is serializers.empty:
@@ -157,22 +149,53 @@ class UserAnswerSerializer(serializers.Serializer):
 
 class AnswerWithScoreSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
-    chosen_option_ids = serializers.ListField(child=serializers.IntegerField())
-    correct_answers_id = serializers.ListField(child=serializers.IntegerField())
     score = serializers.FloatField()
 
 
+class MCQAnswerWithScoreSerializer(AnswerWithScoreSerializer):
+    user_answer = serializers.ListField(child=serializers.IntegerField())
+    correct_answer = serializers.ListField(child=serializers.IntegerField())
+
+
+class TrueFalseAnswerWithScoreSerializer(AnswerWithScoreSerializer):
+    user_answer = serializers.BooleanField()
+    correct_answer = serializers.BooleanField()
+
+
+def get_scored_answer_serializer(question):
+    if isinstance(question, MCQQuestion):
+        return MCQAnswerWithScoreSerializer
+    elif isinstance(question, TrueFalseQuestion):
+        return TrueFalseAnswerWithScoreSerializer
+    else:
+        return AnswerWithScoreSerializer
+
+
 class QuizResultSerializer(serializers.Serializer):
-    scored_answers = AnswerWithScoreSerializer(many=True)
+    scored_answers = serializers.SerializerMethodField()
     total_score = serializers.FloatField()
     quiz_id = serializers.IntegerField()
+
+    def get_scored_answers(self, obj):
+        initial_data = self.initial_data
+        scored_answers = initial_data.get('scored_answers')
+        serializer_data = []
+
+        for answer in scored_answers:
+            if isinstance(answer, MCQUserAnswerSerializer):
+                serializer = MCQAnswerWithScoreSerializer
+            else:
+                serializer = AnswerWithScoreSerializer
+
+            serializer_data.append(serializer(answer).data)
+
+        return serializer_data
 
 
 class QuizSubmissionSerializer(serializers.Serializer):
     # Serializer for quiz answers including multiple
     # questions
-    quiz_id = serializers.IntegerField()
-    answers = UserAnswerSerializer(many=True)
+    answers = MCQUserAnswerSerializer(many=True)
 
     @staticmethod
     def validate_quiz_id(value):
@@ -186,30 +209,35 @@ class QuizSubmissionSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         user = self.context.get("user")
-        quiz = Quiz.objects.get(pk=validated_data.get("quiz_id"))
+        quiz = self.context.get("quiz")
         total = 0
-        answers_with_score = []
+        answers_with_score = []  # List for scored answers
         for answer in validated_data.get('answers'):
-            question = \
-                MCQQuestion.objects.get(pk=answer.get("question_id"))
-            question_answers = [
-                option.id for option
-                in question.options.filter(correct__exact=True)
-            ]
-            evaluator = MCQQuestionBinaryEvaluator(set(question_answers))
-            score = evaluator.evaluate(answer.get("chosen_option_ids"))
-            total += score
-            answer_with_score = {
-                "question_id": answer.get("question_id"),
-                "correct_answer_ids": question_answers,
-                "score": score,
-                "chosen_option_ids": answer.get("chosen_option_ids")
+            basic_question = \
+                Question.objects.get(pk=answer.get("question_id"))
+            question = basic_question.get_question_with_type()  # Question with specific type
+            question_answer = question.get_answer()  # Answer on the question
+            evaluator_type = question.get_evaluator()  # Evaluator for specific question
+            evaluator = evaluator_type(question_answer)  # Evaluator instance
+            score = evaluator.evaluate(answer.get("chosen_option_ids"))  # Score of the user answer
+            total += score  # Adding score to the total score of user in quiz
+            answer.update(
+                {
+                    'correct_answer': question_answer,
+                    'score': score
+                }
+            )  # Adding score and correct answer to give answer by user
+            answer_with_score_serializer_type = get_scored_answer_serializer(question)
+            answer_with_score_serializer = answer_with_score_serializer_type(answer)
+            answers_with_score.append(answer_with_score_serializer.data)
+        take = Take(quiz=quiz, user=user, points=total)  # Instantiating model for the quiz take
+        take.save()  # Adding this try to database
+        quiz_result_serializer = QuizResultSerializer(
+            data={
+                "scored_answers": answers_with_score,
+                "quiz_id": validated_data.get("quiz_id"),
+                "total_score": total
             }
-            answers_with_score.append(answer_with_score)
-        take = Take(quiz=quiz, user=user, points=total)
-        take.save()
-        quiz_result_serializer = QuizResultSerializer(data={"scored_answers": answers_with_score,
-                                                            "quiz_id": validated_data.get("quiz_id"),
-                                                            "total_score": total})
-        quiz_result_serializer.is_valid()
+        )
+        quiz_result_serializer.is_valid(raise_exception=True)
         return quiz_result_serializer.data
