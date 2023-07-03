@@ -13,6 +13,7 @@ from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSe
 from quiz.tasks import create_quiz
 
 
+
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -23,7 +24,7 @@ class QuizViewSet(ViewSet):
         """
         Get list of quizzes for current user.
         """
-        queryset = request.user.quizzes.filter(ready__exact=True)
+        queryset = request.user.quizzes
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -58,6 +59,9 @@ class QuizViewSet(ViewSet):
         if quiz.private and quiz.creator != request.user:
             return JsonResponse({"detail": "This quiz is private and cannot be accessed by you."},
                                 status=status.HTTP_403_FORBIDDEN)
+        if not quiz.ready:
+            return JsonResponse({"detail": "This quiz is not ready yet."},
+                                status=status.HTTP_425_TOO_EARLY)
         if answer:
             quiz_serializer = QuizAnswersSerializer(quiz)  # Serializer for answer request
         else:

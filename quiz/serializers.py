@@ -52,7 +52,7 @@ class QuizSerializer(serializers.ModelSerializer):
 class QuizMeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'ready']
 
 
 class QuizAnswersSerializer(QuizSerializer):
