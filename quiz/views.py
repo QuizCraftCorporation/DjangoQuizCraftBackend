@@ -4,14 +4,14 @@ from rest_framework.decorators import action, permission_classes
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 # View class for registration
 from rest_framework.viewsets import ViewSet
 
-from QuizGeneratorModel.quiz_craft_package.quiz_generator import QuizGenerator
 from quiz.models import Material, Quiz
 from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
     GetQuizSerializer, QuizMeSerializer
+from quiz.tasks import create_quiz
+
 
 
 class QuizViewSet(ViewSet):
@@ -33,7 +33,7 @@ class QuizViewSet(ViewSet):
         """
         Create new quiz using QuizGeneratorModel submodule.
         """
-        if request.user.quizzes.filter(ready__exact=True):
+        if request.user.quizzes.filter(ready__exact=False):
             return JsonResponse({"detail": "You have quiz already generating for you."},
                                 status=status.HTTP_403_FORBIDDEN)
         serializer = QuizCreateSerializer(data=request.data)
@@ -47,14 +47,9 @@ class QuizViewSet(ViewSet):
                                                    file=file)
             new_material.quiz_set.add(quiz)
             materials.append(new_material)
-        quiz_gen = QuizGenerator(debug=False)
-        if max_questions:
-            result = quiz_gen.create_questions_from_files([str(material.file.file) for material in materials],
-                                                          max_questions=max_questions)
-        else:
-            result = quiz_gen.create_questions_from_files([str(material.file.file) for material in materials])
-        quiz.add_questions(result)
-        return Response(QuizSerializer(quiz).data)
+        file_names = [str(material.file.file) for material in materials]
+        create_quiz.delay(file_names, quiz.pk, max_questions)
+        return Response({"detail": "Quiz on creation stage"}, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None, **kwargs):
         answer = True if request.query_params.get('answer') else False

@@ -33,6 +33,10 @@ DEBUG = int(env("DEBUG", default=1))
 
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS").split(" ") if not DEBUG else []
 
+# Celery settings
+
+CELERY_BROKER_URL = 'amqp://localhost'
+
 
 # Application definition
 

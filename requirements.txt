@@ -8,3 +8,5 @@ django-filter==23.2
 gunicorn==20.1.0
 django-cors-headers==4.1.0
 cryptography
+python-dateutil
+Celery==5.3.1

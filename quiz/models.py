@@ -95,9 +95,6 @@ class Quiz(models.Model):
             for option in options:
                 option.save()
                 mcq.options.add(option)
-            mcqs.append(mcq)
-
-        for mcq in mcqs:
             mcq.save()
 
     class Meta:
