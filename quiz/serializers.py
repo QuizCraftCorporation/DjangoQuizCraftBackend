@@ -1,7 +1,9 @@
 import random
 
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
 from .models import MCQQuestion, MCQOption, Question, Quiz, Take, TrueFalseQuestion
 
@@ -197,24 +199,19 @@ class QuizSubmissionSerializer(serializers.Serializer):
     # questions
     answers = MCQUserAnswerSerializer(many=True)
 
-    @staticmethod
-    def validate_quiz_id(value):
-        try:
-            # Check if the quiz with the given ID exists
-            Quiz.objects.get(pk=value)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError("Invalid quiz ID.")
-
-        return value
-
     def create(self, validated_data):
         user = self.context.get("user")
         quiz = self.context.get("quiz")
         total = 0
         answers_with_score = []  # List for scored answers
+        scored_ids = set()
         for answer in validated_data.get('answers'):
-            basic_question = \
-                Question.objects.get(pk=answer.get("question_id"))
+            question_id = answer.get("question_id")
+            if question_id in scored_ids:
+                raise ValidationError(
+                    detail={"detail": f"Question id {question_id} is repeated"}
+                )
+            basic_question = Question.objects.get(pk=question_id)
             question = basic_question.get_question_with_type()  # Question with specific type
             question_answer = question.get_answer()  # Answer on the question
             evaluator_type = question.get_evaluator()  # Evaluator for specific question
@@ -230,12 +227,13 @@ class QuizSubmissionSerializer(serializers.Serializer):
             answer_with_score_serializer_type = get_scored_answer_serializer(question)
             answer_with_score_serializer = answer_with_score_serializer_type(answer)
             answers_with_score.append(answer_with_score_serializer.data)
+            scored_ids.add(question.pk)
         take = Take(quiz=quiz, user=user, points=total)  # Instantiating model for the quiz take
         take.save()  # Adding this try to database
         quiz_result_serializer = QuizResultSerializer(
             data={
                 "scored_answers": answers_with_score,
-                "quiz_id": validated_data.get("quiz_id"),
+                "quiz_id": quiz.id,
                 "total_score": total
             }
         )
