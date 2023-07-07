@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from datetime import timedelta
 from pathlib import Path
 
@@ -21,7 +21,6 @@ environ.Env.read_env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -31,15 +30,21 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(env("DEBUG", default=1))
 
-ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS").split(" ") if not DEBUG else []
+ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
 # Celery settings
+RABBITMQ = {
+    "PROTOCOL": env("RABBITMQ_PROTOCOL", default="amqp"),  # in prod change with "amqps"
+    "HOST": env("RABBITMQ_HOST", default="localhost"),
+    "PORT": env("RABBITMQ_PORT", default=5672),
+    "USER": env("RABBITMQ_USER", default="guest"),
+    "PASSWORD": env("RABBITMQ_PASSWORD", default="guest"),
+}
 
-CELERY_BROKER_URL = 'amqp://localhost'
-
+CELERY_BROKER_URL = f"{RABBITMQ['PROTOCOL']}://{RABBITMQ['USER']}:" \
+                    f"{RABBITMQ['PASSWORD']}@{RABBITMQ['HOST']}:{RABBITMQ['PORT']}"
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -108,18 +113,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "app.wsgi.application"
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env("DB_NAME"),
-        'USER': env("DB_USER"),
-        'PASSWORD': env("DB_PASSWORD"),
-        'HOST': env("DB_HOST"),
-        'PORT': env("DB_PORT"),
+        'ENGINE': env("DB_ENGINE", default="django.db.backends.sqlite3"),
+        'NAME': env("DB_NAME", default=os.path.join(BASE_DIR, "db.sqlite3")),
+        'USER': env("DB_USER", default="user"),
+        'PASSWORD': env("DB_PASSWORD", default="password"),
+        'HOST': env("DB_HOST", default="localhost"),
+        'PORT': env("DB_PORT", default="5432"),
     }
 }
 
@@ -156,7 +160,6 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.ScryptPasswordHasher",
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -167,7 +170,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
