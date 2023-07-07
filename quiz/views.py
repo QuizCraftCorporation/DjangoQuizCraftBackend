@@ -13,7 +13,6 @@ from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSe
 from quiz.tasks import create_quiz
 
 
-
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -67,6 +66,14 @@ class QuizViewSet(ViewSet):
         else:
             quiz_serializer = QuizSerializer(quiz)  # Serializer for simple quiz request
         return Response(quiz_serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def check_generation(self, request):
+        if request.user.quizzes.filter(ready__exact=False):
+            return JsonResponse({"detail": "You have quiz already generating for you."},
+                                status=status.HTTP_425_TOO_EARLY)
+        return JsonResponse({"detail": "You have no quizzes generating for you."},
+                            status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def attempt(self, request, pk=None):
