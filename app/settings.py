@@ -15,11 +15,14 @@ from pathlib import Path
 
 import environ
 
+from app.SearchDB import SearchDB
+
 env = environ.Env()
 environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+SEARCH_DB = SearchDB(env('SEARCH_DB_PATH'))
 
 
 # Quick-start development settings - unsuitable for production

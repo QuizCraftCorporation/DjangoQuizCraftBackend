@@ -7,6 +7,7 @@ from rest_framework.response import Response
 # View class for registration
 from rest_framework.viewsets import ViewSet
 
+from app.settings import SEARCH_DB, env
 from quiz.models import Material, Quiz
 from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
     GetQuizSerializer, QuizMeSerializer
@@ -32,7 +33,12 @@ class QuizViewSet(ViewSet):
         """
         Create new quiz using QuizGeneratorModel submodule.
         """
-        if request.user.quizzes.filter(ready__exact=True):
+
+        def create(self, request):
+            """
+            Create new quiz using QuizGeneratorModel submodule.
+            """
+        if request.user.quizzes.filter(ready__exact=False):
             return JsonResponse({"detail": "You have quiz already generating for you."},
                                 status=status.HTTP_403_FORBIDDEN)
         serializer = QuizCreateSerializer(data=request.data)
@@ -46,7 +52,8 @@ class QuizViewSet(ViewSet):
                                                    file=file)
             new_material.quiz_set.add(quiz)
             materials.append(new_material)
-        create_quiz.delay(materials, quiz, max_questions)
+        file_names = [str(material.file.file) for material in materials]
+        create_quiz.delay(file_names, quiz.pk, max_questions, request.data["description"])
         return Response({"detail": "Quiz on creation stage"}, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None, **kwargs):
@@ -62,6 +69,16 @@ class QuizViewSet(ViewSet):
         else:
             quiz_serializer = QuizSerializer(quiz)  # Serializer for simple quiz request
         return Response(quiz_serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        search_data = request.data['data']
+        results = SEARCH_DB.search_quiz(search_data,
+                                        number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS')))
+        ids = [result[1] for result in results]
+        queryset = Quiz.objects.filter(id__in=ids)
+        serializer = QuizMeSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def attempt(self, request, pk=None):
