@@ -1,0 +1,86 @@
+version: "3.9"
+
+services:
+  celery:
+    container_name: celery
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint:
+      - ./scripts/celery-entrypoint.sh
+    volumes:
+      - .:/usr/src/app
+    env_file:
+      - config/.env.dev.rabbitmq
+      - config/.env.dev.django
+    depends_on:
+      - backend
+      - rabbitmq
+    networks:
+      - quiz
+
+  # Deploy the broker.
+  rabbitmq:
+    container_name: rabbitmq
+    restart: unless-stopped
+    image: rabbitmq:3-management-alpine
+    env_file:
+      - config/.env.dev.rabbitmq
+    ports:
+      - "5672:5672"
+    networks:
+      - quiz
+
+  backend:
+    container_name: backend
+    env_file:
+      - config/.env.dev
+      - config/.env.dev.django
+      - config/.env.dev.rabbitmq
+      - config/.env.dev.db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint:
+      - ./scripts/server-entrypoint.sh
+    command: gunicorn app.wsgi --bind ${DJANGO_HOST?}:${DJANGO_PORT?}
+    ports:
+      - ${DJANGO_PORT?}:${DJANGO_PORT?}
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/usr/src/app
+    links:
+      - db
+    networks:
+      - quiz
+
+  db:
+    container_name: db
+    image: postgres:15.2-alpine
+    restart: unless-stopped
+    env_file:
+      - config/.env.dev.db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
+      interval: 5s
+      timeout: 1s
+      retries: 5
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_db:/var/lib/postgresql
+    networks:
+      - quiz
+
+networks:
+  quiz:
+    name: quiz
+    driver: bridge
+
+volumes:
+  postgres_db:
+    driver: local

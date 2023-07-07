@@ -7,19 +7,22 @@ WORKDIR /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN apk update && apk add --no-cache postgresql-dev gcc g++ subversion python3-dev musl-dev libffi-dev
+# install dependencies
+RUN apk update && apk add --no-cache postgresql-dev gcc g++ subversion \
+python3-dev musl-dev libffi-dev openssl openssh-keygen
 
+# create venv and isntall requirements
+RUN python3.10 -m venv venv
+RUN source venv/bin/activate
 RUN pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install -r ./requirements.txt
 COPY /QuizGeneratorModel/requirements.txt .
-RUN pip install numpy==1.25.0 --prefer-binary
-RUN ARCHFLAGS=-Wno-error=unused-command-line-argument-hard-error-in-future pip install --upgrade numpy
-RUN pip install -Ur ./requirements.txt --prefer-binary
+RUN pip install -r ./requirements.txt
 
-COPY entrypoint.sh .
-RUN chmod +x ./entrypoint.sh
+# copy project
+COPY . .
 
-COPY .. .
-
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+# generate keys
+# RUN chmod +x ./key_gen.sh
+# RUN ./key_gen.sh
