@@ -7,6 +7,7 @@ from abc import abstractmethod
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from sqlalchemy import null
 
 from authorization.models import User
 from .quiz_evaluation import (
@@ -76,9 +77,11 @@ class Quiz(models.Model):
         verbose_name="creator id", related_name="quizzes",
         null=True
     )
+    description = models.TextField(blank=False, max_length=400)
     private = models.BooleanField(default=False)
     ready = models.BooleanField(default=False)
     description = models.TextField()
+    created_at = models.DateTimeField(null=True)
 
     REQUIRED_FIELDS = ["name"]
 
@@ -98,9 +101,17 @@ class Quiz(models.Model):
                 mcq.options.add(option)
             mcq.save()
 
+    def view(self):
+        QuizView.objects.create(quiz_Id=self.id)
+
     class Meta:
         verbose_name = _("quiz")
         verbose_name_plural = _("quizzes")
+
+
+class QuizView(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="views")
+    viewed_at = models.DateTimeField(auto_now_add=True)
 
 
 class QuizGroup(models.Model):
