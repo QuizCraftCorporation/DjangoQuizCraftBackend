@@ -78,6 +78,7 @@ class Quiz(models.Model):
     )
     private = models.BooleanField(default=False)
     ready = models.BooleanField(default=False)
+    description = models.TextField()
 
     REQUIRED_FIELDS = ["name"]
 

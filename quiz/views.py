@@ -20,11 +20,43 @@ class QuizViewSet(ViewSet):
     """
 
     @permission_classes([IsAuthenticated])
-    def list(self, request):
+    def me(self, request):
         """
         Get list of quizzes for current user.
         """
         queryset = request.user.quizzes
+        serializer = QuizMeSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def list(self, request):
+        """
+        Get list of quizzes for given query parameters.
+        """
+
+        queryset = request.user.quizzes
+
+        # Sorting
+        sort_algorithm = request.query_params.get('sort')
+        if sort_algorithm == 'views':
+            queryset = queryset.order_by('-views')  # Sorting by views in descending order
+        elif sort_algorithm == 'passes':
+            queryset = queryset.order_by('-passes')  # Sorting by passes in descending order
+
+        # Filtering by start and end dates
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            queryset = queryset.filter(created_at__gte=start_date)
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            queryset = queryset.filter(created_at__lte=end_date)
+
+        # Pagination
+        offset = int(request.query_params.get('offset', 0))
+        limit = int(request.query_params.get('limit', 10))
+        queryset = queryset[offset:offset + limit]
+
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
