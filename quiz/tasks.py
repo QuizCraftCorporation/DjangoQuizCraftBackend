@@ -6,7 +6,6 @@ from quiz.models import Quiz
 
 @shared_task
 def create_quiz(file_names, pk, max_questions):
-    print(123)
     quiz = Quiz.objects.get(pk=pk)
     quiz_gen = QuizGenerator(debug=False)
     if max_questions:

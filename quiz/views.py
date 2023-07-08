@@ -13,7 +13,6 @@ from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSe
 from quiz.tasks import create_quiz
 
 
-
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -33,15 +32,29 @@ class QuizViewSet(ViewSet):
         """
         Create new quiz using QuizGeneratorModel submodule.
         """
-        if request.user.quizzes.filter(ready__exact=False):
-            return JsonResponse({"detail": "You have quiz already generating for you."},
-                                status=status.HTTP_403_FORBIDDEN)
+        processing_quizzes = request.user.quizzes.filter(ready__exact=False)
+        if processing_quizzes:
+            return JsonResponse(
+                {
+                    "detail": "You have quiz already generating for you.",
+                    "ids": [processing_quizz.id for processing_quizz in processing_quizzes]
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = QuizCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         materials = []
         max_questions = serializer.validated_data.get("max_questions")
         name = serializer.validated_data["quiz_name"]
-        quiz = Quiz.objects.create(name=name, creator=request.user)
+        optional = {
+            "description": serializer.validated_data[
+                "description"
+            ] if "description" in serializer.validated_data else "",
+            "private": serializer.validated_data[
+                "private"
+            ] if "private" in serializer.validated_data else False
+        }
+        quiz = Quiz.objects.create(name=name, creator=request.user, **optional)
         for file in serializer.validated_data["files"]:
             new_material = Material.objects.create(name=serializer.validated_data["source_name"],
                                                    file=file)
@@ -49,7 +62,8 @@ class QuizViewSet(ViewSet):
             materials.append(new_material)
         file_names = [str(material.file.file) for material in materials]
         create_quiz.delay(file_names, quiz.pk, max_questions)
-        return Response({"detail": "Quiz on creation stage"}, status=status.HTTP_200_OK)
+        return Response({"detail": "Quiz on creation stage",
+                         "id": quiz.id}, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None, **kwargs):
         answer = True if request.query_params.get('answer') else False
@@ -57,11 +71,18 @@ class QuizViewSet(ViewSet):
         get_quiz_serializer.is_valid(raise_exception=True)
         quiz = Quiz.objects.get(pk=pk)
         if quiz.private and quiz.creator != request.user:
-            return JsonResponse({"detail": "This quiz is private and cannot be accessed by you."},
-                                status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse(
+                {
+                    "detail": "This quiz is private and cannot be accessed by you."},
+                status=status.HTTP_403_FORBIDDEN
+            )
         if not quiz.ready:
-            return JsonResponse({"detail": "This quiz is not ready yet."},
-                                status=status.HTTP_425_TOO_EARLY)
+            return JsonResponse(
+                {
+                    "detail": "This quiz is not ready yet."
+                },
+                status=status.HTTP_425_TOO_EARLY
+            )
         if answer:
             quiz_serializer = QuizAnswersSerializer(quiz)  # Serializer for answer request
         else:

@@ -1,5 +1,4 @@
 import random
-
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
@@ -11,6 +10,8 @@ class QuizCreateSerializer(serializers.Serializer):
     source_name = serializers.CharField()
     max_questions = serializers.IntegerField(required=False)
     files = serializers.ListField(child=serializers.FileField())
+    description = serializers.CharField(required=False)
+    private = serializers.BooleanField(required=False)
 
     def update(self, instance, validated_data):
         instance.creator = self.context.get("request").user.id
@@ -197,16 +198,6 @@ class QuizSubmissionSerializer(serializers.Serializer):
     # questions
     answers = MCQUserAnswerSerializer(many=True)
 
-    @staticmethod
-    def validate_quiz_id(value):
-        try:
-            # Check if the quiz with the given ID exists
-            Quiz.objects.get(pk=value)
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError("Invalid quiz ID.")
-
-        return value
-
     def create(self, validated_data):
         user = self.context.get("user")
         quiz = self.context.get("quiz")
@@ -232,12 +223,8 @@ class QuizSubmissionSerializer(serializers.Serializer):
             answers_with_score.append(answer_with_score_serializer.data)
         take = Take(quiz=quiz, user=user, points=total)  # Instantiating model for the quiz take
         take.save()  # Adding this try to database
-        quiz_result_serializer = QuizResultSerializer(
-            data={
-                "scored_answers": answers_with_score,
-                "quiz_id": validated_data.get("quiz_id"),
-                "total_score": total
-            }
-        )
-        quiz_result_serializer.is_valid(raise_exception=True)
-        return quiz_result_serializer.data
+        return {
+            "scored_answers": answers_with_score,
+            "quiz_id": quiz.id,
+            "total_score": total
+        }

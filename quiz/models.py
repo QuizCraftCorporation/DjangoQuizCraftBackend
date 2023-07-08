@@ -76,6 +76,7 @@ class Quiz(models.Model):
         verbose_name="creator id", related_name="quizzes",
         null=True
     )
+    description = models.TextField(blank=False, max_length=400)
     private = models.BooleanField(default=False)
     ready = models.BooleanField(default=False)
 
