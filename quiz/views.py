@@ -7,7 +7,6 @@ from rest_framework.response import Response
 # View class for registration
 from rest_framework.viewsets import ViewSet
 
-from app.settings import SEARCH_DB, env
 from quiz.models import Material, Quiz
 from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
     GetQuizSerializer, QuizMeSerializer
@@ -33,11 +32,6 @@ class QuizViewSet(ViewSet):
         """
         Create new quiz using QuizGeneratorModel submodule.
         """
-
-        def create(self, request):
-            """
-            Create new quiz using QuizGeneratorModel submodule.
-            """
         if request.user.quizzes.filter(ready__exact=False):
             return JsonResponse({"detail": "You have quiz already generating for you."},
                                 status=status.HTTP_403_FORBIDDEN)
@@ -64,6 +58,9 @@ class QuizViewSet(ViewSet):
         if quiz.private and quiz.creator != request.user:
             return JsonResponse({"detail": "This quiz is private and cannot be accessed by you."},
                                 status=status.HTTP_403_FORBIDDEN)
+        if not quiz.ready:
+            return JsonResponse({"detail": "This quiz is not ready yet."},
+                                status=status.HTTP_425_TOO_EARLY)
         if answer:
             quiz_serializer = QuizAnswersSerializer(quiz)  # Serializer for answer request
         else:
