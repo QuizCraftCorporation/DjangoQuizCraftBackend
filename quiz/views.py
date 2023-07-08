@@ -72,6 +72,7 @@ class QuizViewSet(ViewSet):
 
     @action(detail=False, methods=['get'])
     def search(self, request):
+        # TODO fix the error with vector db connection
         search_data = request.data['data']
         results = SEARCH_DB.search_quiz(search_data,
                                         number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS')))
