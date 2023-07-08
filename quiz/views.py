@@ -13,7 +13,6 @@ from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSe
 from quiz.tasks import create_quiz
 
 
-
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -24,7 +23,7 @@ class QuizViewSet(ViewSet):
         """
         Get list of quizzes for current user.
         """
-        queryset = request.user.quizzes
+        queryset = request.user.quizzes.filter(ready__exact=True)
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -48,7 +47,7 @@ class QuizViewSet(ViewSet):
             new_material.quiz_set.add(quiz)
             materials.append(new_material)
         file_names = [str(material.file.file) for material in materials]
-        create_quiz.delay(file_names, quiz.pk, max_questions)
+        create_quiz.delay(file_names, quiz.pk, max_questions, request.data["description"])
         return Response({"detail": "Quiz on creation stage"}, status=status.HTTP_200_OK)
 
     def retrieve(self, request, pk=None, **kwargs):
@@ -67,6 +66,17 @@ class QuizViewSet(ViewSet):
         else:
             quiz_serializer = QuizSerializer(quiz)  # Serializer for simple quiz request
         return Response(quiz_serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        # TODO fix the error with vector db connection
+        search_data = request.data['data']
+        results = SEARCH_DB.search_quiz(search_data,
+                                        number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS')))
+        ids = [result[1] for result in results]
+        queryset = Quiz.objects.filter(id__in=ids)
+        serializer = QuizMeSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def attempt(self, request, pk=None):

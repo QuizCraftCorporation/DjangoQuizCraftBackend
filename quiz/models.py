@@ -84,13 +84,13 @@ class Quiz(models.Model):
     def add_questions(self, model_questions):
         mcqs = []
         for question in model_questions:
-            q = Question.objects.create(text=question[0], type_id=1, quiz=self)
-            correct_options = set(question[2])
+            q = Question.objects.create(text=question.question_text, type_id=1, quiz=self)
+            correct_options = set(question.right_answers)
             options = []
             mcq = MCQQuestion.objects.create(question=q)
-            for i in range(len(question[1])):
-                correct = i in correct_options
-                options.append(MCQOption(text=question[1][i], correct=correct, question=mcq))
+            for option in question.options:
+                correct = option in correct_options
+                options.append(MCQOption(text=option, correct=correct, question=mcq))
             random.shuffle(options)
             for option in options:
                 option.save()
