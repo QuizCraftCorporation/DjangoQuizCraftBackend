@@ -215,6 +215,13 @@ class QuizViewSet(ViewSet):
             quiz_serializer = QuizSerializer(quiz)  # Serializer for simple quiz request
         return Response(quiz_serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def check_generation(self, request):
+        if request.user.quizzes.filter(ready__exact=False):
+            return JsonResponse({"detail": "You have quiz already generating for you."},
+                                status=status.HTTP_425_TOO_EARLY)
+        return JsonResponse({"detail": "You have no quizzes generating for you."},
+                            status=status.HTTP_200_OK)
     @action(detail=False, methods=['get'])
     def search(self, request):
         # TODO fix the error with vector db connection
