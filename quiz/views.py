@@ -1,3 +1,4 @@
+import random
 from datetime import datetime
 
 from django.contrib.auth.models import AnonymousUser
@@ -57,6 +58,26 @@ class QuizViewSet(ViewSet):
             queryset = request.user.quizzes.filter(ready__exact=True)
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def random(self, request):
+        queryset = Quiz.objects.filter(
+            Q(private__exact=False) |
+            Q(creator__exact=request.user.id), ready__exact=True
+        )
+        if not queryset:
+            return JsonResponse(
+                {
+                    "detail": "No available quizzes for you."
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        random_quiz = random.choice(queryset.all())
+        if request.query_params.get('answer') is True:
+            quiz_serializer = QuizAnswersSerializer(random_quiz)  # Serializer for answer request
+        else:
+            quiz_serializer = QuizSerializer(random_quiz)  # Serializer for simple quiz request
+        return Response(quiz_serializer.data)
 
     def list(self, request):
         """
