@@ -2,7 +2,7 @@
 # BUILDER #
 ###########
 
-FROM python:3.10-alpine3.17 as builder
+FROM python:3.10 as builder
 
 # set the working dir for docker
 WORKDIR /usr/src/app
@@ -12,11 +12,8 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 # install psycopg2 dependencies
-RUN apk update && apk add --no-cache postgresql-dev gcc g++ python3-dev musl-dev
-
-# create virtual evironment
-RUN python3.10 -m venv venv
-RUN source venv/bin/activate
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql postgresql-contrib gcc g++ python3-dev
 
 # lint
 RUN pip install --upgrade pip
@@ -33,7 +30,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r ./Quiz
 #########
 
 # pull official base image
-FROM python:3.10-alpine3.17
+FROM python:3.10
 
 # define env variables
 ENV HOME=/home/app
@@ -50,7 +47,9 @@ RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
 # install dependencies
-RUN apk update && apk add subversion libffi-dev openssl openssh-keygen gcc g++
+RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ subversion \
+    libffi-dev libssl-dev openssh-client
+
 COPY --from=builder /usr/src/app/wheels /wheels
 COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --no-cache /wheels/*
