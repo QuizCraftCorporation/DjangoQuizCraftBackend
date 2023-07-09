@@ -101,8 +101,8 @@ class Quiz(models.Model):
                 mcq.options.add(option)
             mcq.save()
 
-    def view(self):
-        QuizView.objects.create(quiz_Id=self.id)
+    def view(self, user_id):
+        QuizView.objects.create(quiz_id=self.id, viewer_id=user_id)
 
     class Meta:
         verbose_name = _("quiz")
@@ -111,6 +111,7 @@ class Quiz(models.Model):
 
 class QuizView(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="views")
+    viewer = models.ForeignKey(User, on_delete=models.PROTECT, related_name="viewed_quizzes")
     viewed_at = models.DateTimeField(auto_now_add=True)
 
 

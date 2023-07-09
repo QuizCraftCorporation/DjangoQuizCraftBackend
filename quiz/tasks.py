@@ -4,6 +4,7 @@ from typing import Union
 from celery import shared_task
 
 from QuizGeneratorModel.quiz_craft_package.containers.nagim_quiz import NagimQuiz
+from QuizGeneratorModel.quiz_craft_package.quiz_describer import QuizDescriber
 from QuizGeneratorModel.quiz_craft_package.quiz_generator import QuizGenerator
 from app.settings import SEARCH_DB
 from quiz.models import Quiz
@@ -24,6 +25,10 @@ def create_quiz(file_names: list[str], pk: int, max_questions: Union[int, None] 
     quiz.ready = True
     if description:
         ml_quiz.set_description(description)
+    # Generating description
+    describer = QuizDescriber()
+    ml_quiz = describer.generate_description(ml_quiz)
+    # Updating description
     quiz.description = ml_quiz.description
     quiz.created_at = datetime.datetime.now()
     quiz.save()

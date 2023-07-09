@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q, Count
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import action, permission_classes
@@ -10,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from app.settings import SEARCH_DB, env
-from quiz.models import Material, Quiz
+from quiz.models import Material, Quiz, Take, QuizView
 from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSerializer, QuizSubmissionSerializer, \
     GetQuizSerializer, QuizMeSerializer
 from quiz.tasks import create_quiz
@@ -21,12 +23,38 @@ class QuizViewSet(ViewSet):
     View set for working with Quiz model instances in database.
     """
 
-    @permission_classes([IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
         """
         Get list of quizzes for current user.
         """
-        queryset = request.user.quizzes.filter(ready__exact=True)
+        sort = request.query_params.get('sort')
+        print(sort)
+        if sort == 'last_viewed':
+            views = QuizView.objects.filter(viewer_id__exact=request.user.id)
+            # Filtering by start and end dates
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+            if start_date:
+                views = QuizView.objects.filter(viewed_at__gte=start_date)
+            if end_date:
+                views = QuizView.objects.filter(viewed_at__lte=end_date)
+            quizzes = views.order_by('-viewed_at')
+            offset = int(request.query_params.get('offset', 0))
+            limit = int(request.query_params.get('limit', 10))
+            queryset = quizzes.values_list('quiz_id', flat=True).distinct()  # Add distinct() to remove duplicates
+            queryset = queryset[offset:offset + limit]
+            bulk = Quiz.objects.in_bulk(queryset)
+            # result = []
+            # for pk in queryset:
+            #     if not bulk:
+            #         queryset = {}
+            #     if pk in bulk:
+            #         result.append(bulk[pk])
+            #         bulk.pop(pk)
+            queryset = [bulk[pk] for pk in queryset]
+        else:
+            queryset = request.user.quizzes.filter(ready__exact=True)
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -35,15 +63,10 @@ class QuizViewSet(ViewSet):
         Get list of quizzes for given query parameters.
         """
 
-        queryset = request.user.quizzes
-
-        # Sorting
-        sort_algorithm = request.query_params.get('sort')
-        if sort_algorithm == 'views':
-            queryset = queryset.order_by('-views')  # Sorting by views in descending order
-        elif sort_algorithm == 'passes':
-            queryset = queryset.order_by('-passes')  # Sorting by passes in descending order
-
+        queryset = Quiz.objects.filter(
+            Q(private__exact=False) |
+            Q(creator__exact=request.user.id)
+        )
         # Filtering by start and end dates
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
@@ -53,6 +76,46 @@ class QuizViewSet(ViewSet):
         if end_date:
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
             queryset = queryset.filter(created_at__lte=end_date)
+
+        # Sorting
+        sort_algorithm = request.query_params.get('sort')
+        if sort_algorithm == 'views':
+            ids = queryset.values_list('id', flat=True)
+            views = QuizView.objects.filter(quiz_id__in=ids)
+            if start_date:
+                views = views.filter(viewed_at__gte=start_date)
+            if end_date:
+                views = views.filter(viewed_at__lte=end_date)
+            sorted_views = views.values('quiz_id').annotate(count=Count('quiz_id')).order_by('-count')
+            target_ids = sorted_views.values_list('quiz_id', flat=True)
+            bulk = Quiz.objects.in_bulk(target_ids)
+            queryset = [bulk[pk] for pk in target_ids]  # Sorting by views in descending order
+        elif sort_algorithm == 'unique_views':
+            ids = queryset.values_list('id', flat=True)
+            views = QuizView.objects.filter(quiz_id__in=ids)
+            if start_date:
+                views = views.filter(viewed_at__gte=start_date)
+            if end_date:
+                views = views.filter(viewed_at__lte=end_date)
+            sorted_views = views.values('quiz_id').annotate(
+                count=Count('viewer_id', distinct=True)
+            ).order_by('-count')
+            target_ids = sorted_views.values_list('quiz_id', flat=True).distinct()
+            bulk = Quiz.objects.in_bulk(target_ids)
+            queryset = [bulk[pk] for pk in target_ids]
+        elif sort_algorithm == 'passes':
+            takes = Take.objects.filter(quiz__creator__id__in=queryset.values("id"))
+            if start_date:
+                takes = takes.filter(passage_date__gte=start_date)
+            if end_date:
+                takes = takes.filter(passage_date__lte=end_date)
+            queryset = takes.values('quiz_id').annotate(count=Count('quiz_id')).order_by(
+                '-count')  # Sorting by passes in descending order
+            target_ids = queryset.values_list('quiz_id', flat=True)
+            bulk = Quiz.objects.in_bulk(target_ids)
+            queryset = [bulk[pk] for pk in target_ids]
+        elif sort_algorithm == 'generations':
+            queryset = queryset.filter(ready__exact=True).order_by('-created_at')
 
         # Pagination
         offset = int(request.query_params.get('offset', 0))
@@ -96,7 +159,7 @@ class QuizViewSet(ViewSet):
             new_material.quiz_set.add(quiz)
             materials.append(new_material)
         file_names = [str(material.file.file) for material in materials]
-        create_quiz.delay(file_names, quiz.pk, max_questions, request.data["description"])
+        create_quiz.delay(file_names, quiz.pk, max_questions, optional["description"])
         return Response(
             {
                 "detail": "Quiz on creation stage",
@@ -109,7 +172,8 @@ class QuizViewSet(ViewSet):
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
         quiz = Quiz.objects.get(pk=pk)
-        quiz.view()
+        if request.user is not AnonymousUser:
+            quiz.view(request.user.id)
         quiz.save()
         if quiz.private and quiz.creator != request.user:
             return JsonResponse(

@@ -33,10 +33,12 @@ class GetQuizSerializer(serializers.Serializer):
 class QuizSerializer(serializers.ModelSerializer):
     questions = serializers.SerializerMethodField()
     title = serializers.SerializerMethodField()
+    description = serializers.CharField()
+    private = serializers.BooleanField()
 
     class Meta:
         model = Quiz
-        fields = ["id", "title", "questions"]
+        fields = ["id", "title", "questions", "description", "private"]
 
     def get_questions(self, obj: Quiz):
         all_questions = obj.question_set.all()
