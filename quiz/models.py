@@ -208,7 +208,7 @@ class AbstractQuestion(models.Model):
 
 
 class MCQOption(models.Model):
-    text = models.CharField(_("option text"))
+    text = models.CharField(_("option text"), max_length=200)
     id = models.AutoField(_("option id"), primary_key=True)
     question = models.ForeignKey(
         "MCQQuestion", on_delete=models.CASCADE, verbose_name="question", null=True,
