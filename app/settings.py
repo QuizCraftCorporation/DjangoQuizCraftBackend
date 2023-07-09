@@ -22,7 +22,7 @@ environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-SEARCH_DB = SearchDB(env('SEARCH_DB_PATH'))
+SEARCH_DB = SearchDB(env('SEARCH_DB_PATH', default="nagim_database"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -68,6 +68,7 @@ CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(" ") if not CORS_ORIGIN
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -86,13 +87,18 @@ REST_FRAMEWORK = {
     ),
 }
 
+ALGORITHM = env("ALGORITHM", default="RS256")
+SIGNING_KEY = open(env('PRIVATE_KEY_PATH', default='jwtRS256.key')).read() if 'RS' in ALGORITHM else SECRET_KEY
+
 # Simple JWT settings
 SIMPLE_JWT = {
-    "ALGORITHM": "RS256",
+    "ALGORITHM": env("ALGORITHM", default="RS256"),
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
-    "SIGNING_KEY": open(env('PRIVATE_KEY_PATH', default='jwtRS256.key')).read(),
-    "VERIFYING_KEY": open(f"{env('PRIVATE_KEY_PATH', default='jwtRS256.key')}.pub").read(),
+    "SIGNING_KEY": SIGNING_KEY,
+    "VERIFYING_KEY": open(
+        f"{env('PRIVATE_KEY_PATH', default='jwtRS256.key')}.pub"
+    ).read() if 'RS' in ALGORITHM else "",
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
