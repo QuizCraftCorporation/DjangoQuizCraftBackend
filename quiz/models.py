@@ -7,6 +7,7 @@ from abc import abstractmethod
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from sqlalchemy import null
 
 from authorization.models import User
 from .quiz_evaluation import (
@@ -76,30 +77,42 @@ class Quiz(models.Model):
         verbose_name="creator id", related_name="quizzes",
         null=True
     )
+    description = models.TextField(blank=False, max_length=400)
     private = models.BooleanField(default=False)
     ready = models.BooleanField(default=False)
+    description = models.TextField()
+    created_at = models.DateTimeField(null=True)
 
     REQUIRED_FIELDS = ["name"]
 
     def add_questions(self, model_questions):
         mcqs = []
         for question in model_questions:
-            q = Question.objects.create(text=question[0], type_id=1, quiz=self)
-            correct_options = set(question[2])
+            q = Question.objects.create(text=question.question_text, type_id=1, quiz=self)
+            correct_options = set(question.right_answers)
             options = []
             mcq = MCQQuestion.objects.create(question=q)
-            for i in range(len(question[1])):
-                correct = i in correct_options
-                options.append(MCQOption(text=question[1][i], correct=correct, question=mcq))
+            for option in question.options:
+                correct = option in correct_options
+                options.append(MCQOption(text=option, correct=correct, question=mcq))
             random.shuffle(options)
             for option in options:
                 option.save()
                 mcq.options.add(option)
             mcq.save()
 
+    def view(self, user_id):
+        QuizView.objects.create(quiz_id=self.id, viewer_id=user_id)
+
     class Meta:
         verbose_name = _("quiz")
         verbose_name_plural = _("quizzes")
+
+
+class QuizView(models.Model):
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name="views")
+    viewer = models.ForeignKey(User, on_delete=models.PROTECT, related_name="viewed_quizzes")
+    viewed_at = models.DateTimeField(auto_now_add=True)
 
 
 class QuizGroup(models.Model):
