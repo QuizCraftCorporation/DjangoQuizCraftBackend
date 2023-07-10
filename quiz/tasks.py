@@ -25,11 +25,12 @@ def create_quiz(file_names: list[str], pk: int, max_questions: Union[int, None] 
     quiz.ready = True
     if description:
         ml_quiz.set_description(description)
-    # Generating description
-    describer = QuizDescriber()
-    ml_quiz = describer.generate_description(ml_quiz)
-    # Updating description
-    quiz.description = ml_quiz.description
+    else:
+        # Generating description
+        describer = QuizDescriber()
+        ml_quiz = describer.generate_description(ml_quiz)
+        # Updating description
+        quiz.description = ml_quiz.description
     quiz.created_at = datetime.datetime.now()
     quiz.save()
     SEARCH_DB.save_quiz(quiz=ml_quiz, unique_id=str(quiz.id))
