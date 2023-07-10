@@ -55,7 +55,7 @@ class QuizViewSet(ViewSet):
             #         bulk.pop(pk)
             queryset = [bulk[pk] for pk in queryset]
         else:
-            queryset = request.user.quizzes.filter(ready__exact=True)
+            queryset = request.user.quizzes.all()
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -222,6 +222,7 @@ class QuizViewSet(ViewSet):
                                 status=status.HTTP_425_TOO_EARLY)
         return JsonResponse({"detail": "You have no quizzes generating for you."},
                             status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['get'])
     def search(self, request):
         # TODO fix the error with vector db connection
