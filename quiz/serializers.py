@@ -212,7 +212,7 @@ class QuizSubmissionSerializer(serializers.Serializer):
             question_answer = question.get_answer()  # Answer on the question
             evaluator_type = question.get_evaluator()  # Evaluator for specific question
             evaluator = evaluator_type(question_answer)  # Evaluator instance
-            score = evaluator.evaluate(answer.get("chosen_option_ids"))  # Score of the user answer
+            score = evaluator.evaluate(answer.get("user_answer"))  # Score of the user answer
             total += score  # Adding score to the total score of user in quiz
             answer.update(
                 {
