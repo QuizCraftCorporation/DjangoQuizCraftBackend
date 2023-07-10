@@ -49,7 +49,7 @@ class MCQQuestionBinaryEvaluator(QuestionEvaluator):
         Returns:
             int: The score for the user's answer.
         """
-        return int(self.answer == user_answer)
+        return int(self.answer == set(user_answer))
 
 
 class TrueFalseQuestionEvaluator(QuestionEvaluator):
