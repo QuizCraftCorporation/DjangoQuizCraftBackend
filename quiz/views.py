@@ -193,9 +193,6 @@ class QuizViewSet(ViewSet):
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
         quiz = Quiz.objects.get(pk=pk)
-        if request.user is not AnonymousUser:
-            quiz.view(request.user.id)
-        quiz.save()
         if quiz.private and quiz.creator != request.user:
             return JsonResponse(
                 {
@@ -213,6 +210,9 @@ class QuizViewSet(ViewSet):
             quiz_serializer = QuizAnswersSerializer(quiz)  # Serializer for answer request
         else:
             quiz_serializer = QuizSerializer(quiz)  # Serializer for simple quiz request
+        if request.user.id:
+            quiz.view(request.user.id)
+            quiz.save()
         return Response(quiz_serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
