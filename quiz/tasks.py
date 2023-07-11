@@ -15,11 +15,16 @@ def create_quiz(file_names: list[str], pk: int, max_questions: Union[int, None] 
                 description: Union[str, None] = None):
     quiz = Quiz.objects.get(pk=pk)
     quiz_gen = QuizGenerator(debug=False)
-    if max_questions:
-        ml_quiz: NagimQuiz = quiz_gen.create_quiz_from_files(file_names,
-                                                             max_questions=max_questions)
-    else:
-        ml_quiz: NagimQuiz = quiz_gen.create_quiz_from_files(file_names)
+    try:
+        ml_quiz: NagimQuiz = quiz_gen.create_quiz_from_files(
+            file_names,
+            **{
+                "max_questions": max_questions
+            }
+        )
+    except Exception as e:
+        quiz.delete()
+        return e.__str__()
     questions = [ml_quiz.get_question(i) for i in range(len(ml_quiz))]
     quiz.add_questions(questions)
     quiz.ready = True
