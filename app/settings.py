@@ -86,13 +86,18 @@ REST_FRAMEWORK = {
     ),
 }
 
+ALGORITHM = env("ALGORITHM", default="RS256")
+SIGNING_KEY = open(env('PRIVATE_KEY_PATH', default='jwtRS256.key')).read() if 'RS' in ALGORITHM else SECRET_KEY
+
 # Simple JWT settings
 SIMPLE_JWT = {
-    "ALGORITHM": "RS256",
+    "ALGORITHM": env("ALGORITHM", default="RS256"),
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
-    "SIGNING_KEY": open(env('PRIVATE_KEY_PATH', default='jwtRS256.key')).read(),
-    "VERIFYING_KEY": open(f"{env('PRIVATE_KEY_PATH', default='jwtRS256.key')}.pub").read(),
+    "SIGNING_KEY": SIGNING_KEY,
+    "VERIFYING_KEY": open(
+        f"{env('PRIVATE_KEY_PATH', default='jwtRS256.key')}.pub"
+    ).read() if 'RS' in ALGORITHM else "",
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
