@@ -225,13 +225,19 @@ class QuizViewSet(ViewSet):
 
     @action(detail=False, methods=['get'])
     def search(self, request):
-        # TODO fix the error with vector db connection
-        search_data = request.data['data']
+        search_data = request.query_params.get('data')
+        if not search_data:
+            return JsonResponse({"detail": "You have no text to search with."},
+                                status=status.HTTP_400_BAD_REQUEST)
         results = SEARCH_DB.search_quiz(search_data,
                                         number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
-        ids = [result[1] for result in results]
-        queryset = Quiz.objects.filter(id__in=ids)
-        serializer = QuizMeSerializer(queryset, many=True)
+        ids = [int(result[1]) for result in results]
+        queryset = Quiz.objects.filter(
+            Q(private__exact=False) |
+            Q(creator__exact=request.user.id)
+        ).in_bulk(ids)
+        result_list = [queryset[pk] for pk in ids]
+        serializer = QuizMeSerializer(result_list, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
