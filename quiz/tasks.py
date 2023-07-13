@@ -1,9 +1,6 @@
 import datetime
 from typing import Union
 
-from celery import shared_task
-
-from QuizGeneratorModel.quiz_craft_package.containers.nagim_quiz import NagimQuiz
 from QuizGeneratorModel.quiz_craft_package.quiz_describer import QuizDescriber
 from QuizGeneratorModel.quiz_craft_package.quiz_stream_generator import QuizStreamGenerator
 from app.celery import app
