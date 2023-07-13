@@ -116,6 +116,8 @@ networks:
 volumes:
   postgres_db:
     driver: local
+  shared-volume:
+    driver: local
   cache:
     driver: local
 
