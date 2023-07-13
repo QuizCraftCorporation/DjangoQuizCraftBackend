@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import urllib.parse
 from datetime import timedelta
 from pathlib import Path
 
 import environ
+import redis
 
 from app.SearchDB import SearchDB
 
@@ -36,17 +38,46 @@ DEBUG = int(env("DEBUG", default=1))
 ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
 # Celery settings
+# RABBITMQ_PASSWORD_FILE = env("REDIS_PASSWORD_FILE", default=None)
+# RABBITMQ_PASSWORD = open(RABBITMQ_PASSWORD_FILE).read() if RABBITMQ_PASSWORD_FILE else "password"
+RABBITMQ_PASSWORD = env("RABBITMQ_PASSWORD", default="guest")
 RABBITMQ = {
     "PROTOCOL": env("RABBITMQ_PROTOCOL", default="amqp"),  # in prod change with "amqps"
     "HOST": env("RABBITMQ_HOST", default="localhost"),
     "PORT": env("RABBITMQ_PORT", default=5672),
     "USER": env("RABBITMQ_USER", default="guest"),
-    "PASSWORD": env("RABBITMQ_PASSWORD", default="guest"),
+    "PASSWORD": RABBITMQ_PASSWORD,
+}
+
+REDIS_PASSWORD_FILE = env("REDIS_PASSWORD_FILE", default=None)
+REDIS_PASSWORD = open(REDIS_PASSWORD_FILE).read() if REDIS_PASSWORD_FILE else "password"
+REDIS = {
+    "PROTOCOL": env("REDIS_PROTOCOL", default="redis"),
+    "HOST": env("REDIS_HOST", default="localhost"),
+    "PORT": env("REDIS_PORT", default=6379),
+    "DATABASE": env("REDIS_DATABASE", default=0),
+    "PASSWORD": REDIS_PASSWORD
+}
+
+# Redis Django settings
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f"{REDIS['PROTOCOL']}://:{REDIS['PASSWORD']}@{REDIS['HOST']}:" \
+                    f"{REDIS['PORT']}/{REDIS['DATABASE']}",
+
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
 }
 
 CELERY_BROKER_URL = f"{RABBITMQ['PROTOCOL']}://{RABBITMQ['USER']}:" \
                     f"{RABBITMQ['PASSWORD']}@{RABBITMQ['HOST']}:{RABBITMQ['PORT']}"
 
+CELERY_RESULT_BACKEND = f"{REDIS['PROTOCOL']}://:{REDIS['PASSWORD']}@{REDIS['HOST']}:" \
+                        f"{REDIS['PORT']}/{REDIS['DATABASE']}"
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -124,12 +155,16 @@ WSGI_APPLICATION = "app.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+
+POSTGRES_PASSWORD_FILE = env("POSTGRES_PASSWORD_FILE", default=None)
+POSTGRES_PASSWORD = open(POSTGRES_PASSWORD_FILE).read() if POSTGRES_PASSWORD_FILE else "password"
+
 DATABASES = {
     'default': {
         'ENGINE': env("DB_ENGINE", default="django.db.backends.sqlite3"),
         'NAME': env("DB_NAME", default=os.path.join(BASE_DIR, "db.sqlite3")),
         'USER': env("DB_USER", default="user"),
-        'PASSWORD': env("DB_PASSWORD", default="password"),
+        'PASSWORD': POSTGRES_PASSWORD,
         'HOST': env("DB_HOST", default="localhost"),
         'PORT': env("DB_PORT", default="5432"),
     }

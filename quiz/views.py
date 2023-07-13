@@ -1,13 +1,14 @@
 import random
 from datetime import datetime
 
-from django.contrib.auth.models import AnonymousUser
+from celery.result import AsyncResult
+from django.core.cache import cache
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import action, permission_classes
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 # View class for registration
 from rest_framework.viewsets import ViewSet
@@ -180,7 +181,9 @@ class QuizViewSet(ViewSet):
             new_material.quiz_set.add(quiz)
             materials.append(new_material)
         file_names = [str(material.file.file) for material in materials]
-        create_quiz.delay(file_names, quiz.pk, max_questions, optional["description"])
+
+        task = create_quiz.delay(file_names, quiz.pk, max_questions, optional["description"])
+        cache.set(quiz.id, task.id, 18000)
         return Response(
             {
                 "detail": "Quiz on creation stage",
@@ -188,6 +191,7 @@ class QuizViewSet(ViewSet):
             }, status=status.HTTP_200_OK
         )
 
+    @permission_classes([IsAuthenticatedOrReadOnly])
     def retrieve(self, request, pk=None, **kwargs):
         answer = True if request.query_params.get('answer') else False
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
@@ -215,13 +219,55 @@ class QuizViewSet(ViewSet):
             quiz.save()
         return Response(quiz_serializer.data)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
     def check_generation(self, request):
-        if request.user.quizzes.filter(ready__exact=False):
-            return JsonResponse({"detail": "You have quiz already generating for you."},
-                                status=status.HTTP_425_TOO_EARLY)
+        not_ready_quizzes = request.user.quizzes.filter(ready__exact=False)
+        if not_ready_quizzes:
+            return JsonResponse(
+                {
+                    "detail": "You have quizzes already generating for you.",
+                    "quizzes": not_ready_quizzes
+                },
+                status=status.HTTP_425_TOO_EARLY
+            )
         return JsonResponse({"detail": "You have no quizzes generating for you."},
                             status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
+    def check_progress(self, request, pk=None):
+        if pk:
+            task_id = cache.get(pk, None)
+            if task_id:
+                task = AsyncResult(task_id)
+
+                if task.state == 'FAILURE' or task.state == 'PENDING':
+                    response = {
+                        'id': pk,
+                        'state': task.state,
+                        'progress': 0,
+                    }
+                    return JsonResponse(response, status=200)
+                current = task.info.get('current', 0)
+                total = task.info.get('total', 1)
+                progress = (int(current) / int(total)) * 100  # to display a percentage of progress of the task
+                response = {
+                    'id': pk,
+                    'state': task.state,
+                    'progress': progress,
+                }
+                return JsonResponse(response, status=200)
+            return JsonResponse(
+                {
+                    "detail": "No tasks are associated with given quiz id!"
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        return JsonResponse(
+            {
+                "detail": "No quiz id was provided!"
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(detail=False, methods=['get'])
     def search(self, request):
