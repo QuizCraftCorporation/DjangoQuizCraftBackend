@@ -14,9 +14,16 @@ services:
     env_file:
       - config/.env.dev.rabbitmq
       - config/.env.dev.django
+    environment:
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - redis_password
+      - postgres_password
     depends_on:
       - backend
       - rabbitmq
+      - redis
     networks:
       - quiz
 
@@ -24,11 +31,9 @@ services:
   rabbitmq:
     container_name: rabbitmq
     restart: unless-stopped
-    image: rabbitmq:3-management-alpine
-    env_file:
-      - config/.env.dev.rabbitmq
-    ports:
-      - "5672:5672"
+    image: rabbitmq:3.10-management-alpine
+    expose:
+      - 5672
     networks:
       - quiz
 
@@ -39,12 +44,18 @@ services:
       - config/.env.dev.django
       - config/.env.dev.rabbitmq
       - config/.env.dev.db
+    environment:
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - redis_password
+      - postgres_password
     build:
       context: .
       dockerfile: Dockerfile
     entrypoint:
       - ./scripts/server-entrypoint.sh
-    command: gunicorn app.wsgi --bind ${DJANGO_HOST?}:${DJANGO_PORT?} --reload --workers 4 --threads 4
+    command: gunicorn app.wsgi --bind ${DJANGO_HOST?}:${DJANGO_PORT?} --reload --workers 1 --threads 4
     ports:
       - ${DJANGO_PORT?}:${DJANGO_PORT?}
     restart: always
@@ -64,15 +75,35 @@ services:
     restart: unless-stopped
     env_file:
       - config/.env.dev.db
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 5s
       timeout: 1s
       retries: 5
-    ports:
-      - "5433:5432"
+    expose:
+      - 5432
     volumes:
       - postgres_db:/var/lib/postgresql
+    networks:
+      - quiz
+
+  redis:
+    container_name: redis
+    image: redis:7-alpine
+    restart: always
+    environment:
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    secrets:
+      - redis_password
+    command: sh -c "redis-server --requirepass $(cat $$REDIS_PASSWORD_FILE) && echo $(cat $$REDIS_PASSWORD_FILE)"
+    expose:
+      - 6379
+    volumes:
+      - cache:/var/lib/redis/data
     networks:
       - quiz
 
@@ -84,3 +115,11 @@ networks:
 volumes:
   postgres_db:
     driver: local
+  cache:
+    driver: local
+
+secrets:
+  redis_password:
+    file: ./secrets/redis-password.txt
+  postgres_password:
+    file: ./secrets/postgres-password.txt

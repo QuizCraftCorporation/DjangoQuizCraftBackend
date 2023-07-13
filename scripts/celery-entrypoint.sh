@@ -1,3 +1,3 @@
 #!/bin/sh
 
-celery -A app worker -l info
+watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A app worker --concurrency=1 --loglevel=INFO
