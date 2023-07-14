@@ -236,6 +236,22 @@ class QuizViewSet(ViewSet):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
     def check_progress(self, request, pk=None):
         if pk:
+            quiz = Quiz.objects.get(pk=pk)
+            if not quiz:
+                return JsonResponse(
+                    {
+                        "detail": "Quiz does not exist!"
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            if quiz.creator != request.user:
+                return JsonResponse(
+                    {
+                        "detail": "Access to this quiz is not allowed for you!"
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
             task_id = cache.get(pk, None)
             if task_id:
                 task = AsyncResult(task_id)
