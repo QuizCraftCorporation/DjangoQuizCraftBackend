@@ -86,8 +86,9 @@ class QuizViewSet(ViewSet):
 
         queryset = Quiz.objects.filter(
             Q(private__exact=False) |
-            Q(creator__exact=request.user.id)
+            Q(creator_id__exact=request.user.id)
         )
+        # 10.90.138.70
         # Filtering by start and end dates
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
@@ -125,7 +126,7 @@ class QuizViewSet(ViewSet):
             bulk = Quiz.objects.in_bulk(target_ids)
             queryset = [bulk[pk] for pk in target_ids]
         elif sort_algorithm == 'passes':
-            takes = Take.objects.filter(quiz__creator__id__in=queryset.values("id"))
+            takes = Take.objects.filter(quiz__id__in=queryset.values("id"))
             if start_date:
                 takes = takes.filter(passage_date__gte=start_date)
             if end_date:
