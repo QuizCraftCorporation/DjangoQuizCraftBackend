@@ -458,8 +458,8 @@ class Take(models.Model):
         return f"Take(quiz={self.quiz}, user={self.user}, points={self.points}, " \
                f"passage_date={self.passage_date})"
 
-    quiz = models.ForeignKey(to=Quiz, on_delete=models.PROTECT, verbose_name="quiz id")
-    user = models.ForeignKey(to=User, on_delete=models.PROTECT, verbose_name="user id")
+    quiz = models.ForeignKey(to=Quiz, on_delete=models.CASCADE, verbose_name="quiz id")
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE, verbose_name="user id")
     points = models.FloatField(_("points"))
     passage_date = models.DateField(_("passage date"), auto_now_add=True, null=False)
     id = models.BigAutoField(_("take id"), primary_key=True, auto_created=True, db_index=True)

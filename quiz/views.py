@@ -19,7 +19,6 @@ from quiz.serializers import QuizAnswersSerializer, QuizCreateSerializer, QuizSe
     GetQuizSerializer, QuizMeSerializer
 from quiz.tasks import create_quiz
 
-
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -88,7 +87,6 @@ class QuizViewSet(ViewSet):
             Q(private__exact=False) |
             Q(creator_id__exact=request.user.id)
         )
-        # 10.90.138.70
         # Filtering by start and end dates
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
@@ -252,7 +250,6 @@ class QuizViewSet(ViewSet):
                     },
                     status=status.HTTP_403_FORBIDDEN
                 )
-            # 10.90.138.70
             task_id = cache.get(pk, None)
             if task_id:
                 task = AsyncResult(task_id)
