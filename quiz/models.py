@@ -7,7 +7,6 @@ from abc import abstractmethod
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from sqlalchemy import null
 
 from authorization.models import User
 from .quiz_evaluation import (
@@ -208,7 +207,7 @@ class AbstractQuestion(models.Model):
 
 
 class MCQOption(models.Model):
-    text = models.CharField(_("option text"))
+    text = models.CharField(_("option text"), max_length=150)
     id = models.AutoField(_("option id"), primary_key=True)
     question = models.ForeignKey(
         "MCQQuestion", on_delete=models.CASCADE, verbose_name="question", null=True,
