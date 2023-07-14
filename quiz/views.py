@@ -195,7 +195,7 @@ class QuizViewSet(ViewSet):
         answer = True if request.query_params.get('answer') else False
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
-        quiz = Quiz.objects.get(pk=pk)
+        quiz = Quiz.objects.filter(pk=pk).first()
         if quiz.private and quiz.creator != request.user:
             return JsonResponse(
                 {
