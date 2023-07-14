@@ -252,6 +252,7 @@ class QuizViewSet(ViewSet):
                     },
                     status=status.HTTP_403_FORBIDDEN
                 )
+            # 10.90.138.70
             task_id = cache.get(pk, None)
             if task_id:
                 task = AsyncResult(task_id)
@@ -298,7 +299,7 @@ class QuizViewSet(ViewSet):
             Q(private__exact=False) |
             Q(creator__exact=request.user.id)
         ).in_bulk(ids)
-        result_list = [queryset[pk] for pk in ids]
+        result_list = [queryset[pk] for pk in ids if queryset.get(pk)]
         serializer = QuizMeSerializer(result_list, many=True)
         return Response(serializer.data)
 
