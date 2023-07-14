@@ -226,7 +226,7 @@ class QuizViewSet(ViewSet):
             return JsonResponse(
                 {
                     "detail": "You have quizzes already generating for you.",
-                    "quizzes": not_ready_quizzes
+                    "quizzes": list(not_ready_quizzes.values_list('id', flat=True))
                 },
                 status=status.HTTP_425_TOO_EARLY
             )

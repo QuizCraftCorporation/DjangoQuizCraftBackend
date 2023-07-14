@@ -36,7 +36,7 @@ def create_quiz(self, file_names: list[str], pk: int, max_questions: Union[int, 
         self.update_state(state='FAILURE',
                           meta=meta)  # Updating state to failure
         return e.__str__()  # Returning error message
-    self.update_state(state='PREPARING DOCUMENTATION')  # Continuing with documentation preparing stage
+    self.update_state(state='PREPARING DOCUMENTATION', meta=meta)  # Continuing with documentation preparing stage
     questions = [ml_quiz.get_question(i) for i in range(len(ml_quiz))]  # Fetching questions from ml quiz model
     quiz.add_questions(questions)  # Adding questions to the quiz
     if description:
