@@ -236,6 +236,23 @@ class QuizViewSet(ViewSet):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
     def check_progress(self, request, pk=None):
         if pk:
+            quiz = Quiz.objects.get(pk=pk)
+            if not quiz:
+                return JsonResponse(
+                    {
+                        "detail": "Quiz does not exist!"
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            if quiz.creator != request.user:
+                return JsonResponse(
+                    {
+                        "detail": "Access to this quiz is not allowed for you!"
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            # 10.90.138.70
             task_id = cache.get(pk, None)
             if task_id:
                 task = AsyncResult(task_id)
@@ -275,14 +292,20 @@ class QuizViewSet(ViewSet):
         if not search_data:
             return JsonResponse({"detail": "You have no text to search with."},
                                 status=status.HTTP_400_BAD_REQUEST)
-        results = SEARCH_DB.search_quiz(search_data,
-                                        number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
+        try:
+            results = SEARCH_DB.search_quiz(search_data,
+                                            number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
+        except Exception:
+            return JsonResponse(
+                {"detail": "Database is empty."},
+                status=status.HTTP_409_CONFLICT
+            )
         ids = [int(result[1]) for result in results]
         queryset = Quiz.objects.filter(
             Q(private__exact=False) |
             Q(creator__exact=request.user.id)
         ).in_bulk(ids)
-        result_list = [queryset[pk] for pk in ids]
+        result_list = [queryset[pk] for pk in ids if queryset.get(pk)]
         serializer = QuizMeSerializer(result_list, many=True)
         return Response(serializer.data)
 
