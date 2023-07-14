@@ -292,8 +292,14 @@ class QuizViewSet(ViewSet):
         if not search_data:
             return JsonResponse({"detail": "You have no text to search with."},
                                 status=status.HTTP_400_BAD_REQUEST)
-        results = SEARCH_DB.search_quiz(search_data,
-                                        number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
+        try:
+            results = SEARCH_DB.search_quiz(search_data,
+                                            number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
+        except Exception:
+            return JsonResponse(
+                {"detail": "Database is empty."},
+                status=status.HTTP_409_CONFLICT
+            )
         ids = [int(result[1]) for result in results]
         queryset = Quiz.objects.filter(
             Q(private__exact=False) |
