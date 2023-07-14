@@ -7,7 +7,6 @@ from abc import abstractmethod
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from sqlalchemy import null
 
 from authorization.models import User
 from .quiz_evaluation import (
@@ -86,7 +85,6 @@ class Quiz(models.Model):
     REQUIRED_FIELDS = ["name"]
 
     def add_questions(self, model_questions):
-        mcqs = []
         for question in model_questions:
             q = Question.objects.create(text=question.question_text, type_id=1, quiz=self)
             correct_options = set(question.right_answers)
