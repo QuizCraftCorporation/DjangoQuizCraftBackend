@@ -31,7 +31,6 @@ class QuizViewSet(ViewSet):
         Get list of quizzes for current user.
         """
         sort = request.query_params.get('sort')
-        print(sort)
         if sort == 'last_viewed':
             views = QuizView.objects.filter(viewer_id__exact=request.user.id)
             # Filtering by start and end dates
@@ -196,7 +195,7 @@ class QuizViewSet(ViewSet):
         answer = True if request.query_params.get('answer') else False
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
-        quiz = Quiz.objects.get(pk=pk)
+        quiz = Quiz.objects.filter(pk=pk).first()
         if quiz.private and quiz.creator != request.user:
             return JsonResponse(
                 {
@@ -236,7 +235,7 @@ class QuizViewSet(ViewSet):
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
     def check_progress(self, request, pk=None):
         if pk:
-            quiz = Quiz.objects.get(pk=pk)
+            quiz = Quiz.objects.filter(pk=pk).first()
             if not quiz:
                 return JsonResponse(
                     {
