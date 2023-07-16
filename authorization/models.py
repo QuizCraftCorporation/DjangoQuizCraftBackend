@@ -10,6 +10,16 @@ class UserManager(BaseUserManager):
     use_in_migration = True
 
     def create_user(self, username, password=None, **extra_fields):
+        """
+        Creates and saves a user with the given username, email and password.
+
+        Args:
+            username (str): The username of the user
+            password (:obj:`str`, optional): The password of the user. Defaults to None.
+            **extra_fields: Extra information fields of the user.
+        Return:
+            authorization.models.User: The newly created user object.
+        """
         if not username:
             raise ValueError('Username is Required')
         user = self.model(username=username, **extra_fields)
@@ -18,6 +28,16 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, username, password, **extra_fields):
+        """
+        Creates and saves a superuser with the given username, email and password.
+
+        Args:
+            username (str): The username of the user
+            password (str): The password of the user.
+            **extra_fields: Extra information fields of the user.
+        Return:
+            The newly created user object.
+        """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)

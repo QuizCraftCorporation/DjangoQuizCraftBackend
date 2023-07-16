@@ -5,15 +5,14 @@ from .models import User
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     """
-        Serializer for registering new users.
+    Serializer for registering new users.
 
-        Fields:
-            id: The ID of the user.
-            username: The username of the user.
-            password: The password of the user.
-            first_name: The first name of the user.
-            last_name: The last name of the user.
-
+    Fields:
+        id: The ID of the user.
+        username: The username of the user.
+        password: The password of the user.
+        first_name: The first name of the user.
+        last_name: The last name of the user.
     """
     class Meta:
         model = User
@@ -22,13 +21,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """
-            Create a new user and save it to the database.
+        Create a new user and save it to the database.
 
-            Args:
-                validated_data (dict): The data that was validated by the serializer.
+        Args:
+            validated_data (dict): The data that was validated by the serializer.
 
-            Returns:
-                authorization.models.User: The newly created user object.
+        Returns:
+            authorization.models.User: The newly created user object.
         """
         print(type(validated_data))
         user = User.objects.create(
@@ -42,13 +41,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     """
-        Serializer for retrieving and updating user information.
+    Serializer for retrieving and updating user information.
 
-        Fields:
-            id: The ID of the user.
-            username: The username of the user.
-            first_name: The first name of the user.
-            last_name: The last name of the user.
+    Fields:
+        id: The ID of the user.
+        username: The username of the user.
+        first_name: The first name of the user.
+        last_name: The last name of the user.
 
     """
     class Meta:

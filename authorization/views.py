@@ -51,17 +51,17 @@ class UserInfoView(APIView):
 
 class RefreshView(TokenRefreshView):
     """
-        This view class is used to refresh the user's token and save it in database. This class is recommended to be
-         used when Blacklist After Rotation is required.
+    This view class is used to refresh the user's token and save it in database. This class is recommended to be
+    used when Blacklist After Rotation is required.
 
-        Args:
-            request: The HTTP request object.
+    Args:
+        request: The HTTP request object.
 
-        Returns:
-            A JSON response containing the new token.
+    Returns:
+        A JSON response containing the new token.
 
-        Todo:
-            fix doubling of tokens in outstanding_tokens database table
+    Todo:
+        fix doubling of tokens in outstanding_tokens database table
     """
 
     def post(self, request, *args, **kwargs):
@@ -80,13 +80,13 @@ class RefreshView(TokenRefreshView):
 
 class LogoutView(APIView):
     """
-        This view class is used to log out the user.
+    This view class is used to log out the user.
 
-        Args:
-            request: The HTTP request object.
+    Args:
+        request: The HTTP request object.
 
-        Returns:
-            A JSON response with status code 205.
+    Returns:
+        A JSON response with status code 205.
     """
 
     permission_classes = (IsAuthenticated,)
@@ -104,13 +104,13 @@ class LogoutView(APIView):
 
 class LogoutAllView(APIView):
     """
-        This view class is used to log out all the user's tokens.
+    This view class is used to log out all the user's tokens.
 
-        Args:
-            request: The HTTP request object.
+    Args:
+        request: The HTTP request object.
 
-        Returns:
-            A JSON response with status code 205.
+    Returns:
+        A JSON response with status code 205.
     """
 
     permission_classes = (IsAuthenticated,)
