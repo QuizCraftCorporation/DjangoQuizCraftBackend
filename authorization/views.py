@@ -15,6 +15,15 @@ from authorization.serializers import UserRegisterSerializer, UserSerializer
 
 # View class for registration
 class RegisterView(APIView):
+    """
+        This view class is used to register new users.
+
+        Args:
+            request: The HTTP request object with data required for registration.
+
+        Returns:
+            A JSON response containing the data of the newly created user.
+    """
     def post(self, request):
         serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -23,6 +32,16 @@ class RegisterView(APIView):
 
 
 class UserInfoView(APIView):
+    """
+        This view class is used to get the information of the authenticated user.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response containing the data of the authenticated user.
+    """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -32,9 +51,16 @@ class UserInfoView(APIView):
 
 class RefreshView(TokenRefreshView):
     """
-        This class will be used when Blacklist After Rotation is required.
+        This view class is used to refresh the user's token and save it in database. This class is recommended to be
+         used when Blacklist After Rotation is required.
 
-        To do:
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response containing the new token.
+
+        Todo:
             fix doubling of tokens in outstanding_tokens database table
     """
 
@@ -53,6 +79,16 @@ class RefreshView(TokenRefreshView):
 
 
 class LogoutView(APIView):
+    """
+        This view class is used to log out the user.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response with status code 205.
+    """
+
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
@@ -67,6 +103,16 @@ class LogoutView(APIView):
 
 
 class LogoutAllView(APIView):
+    """
+        This view class is used to log out all the user's tokens.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response with status code 205.
+    """
+
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
