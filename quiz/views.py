@@ -31,7 +31,7 @@ class QuizViewSet(ViewSet):
         """
         sort = request.query_params.get('sort')
         if sort == 'last_viewed':
-            views = QuizView.objects.filter(viewer__exact=request.user.id)
+            views = QuizView.objects.filter(viewer__exact=request.user)
             # Filtering by start and end dates
             start_date = request.query_params.get('start_date')
             end_date = request.query_params.get('end_date')
