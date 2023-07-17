@@ -1,5 +1,6 @@
 """
-This module contains the view classes for user registration, user information, token refresh, and logging out.
+Description: This module contains the view classes for user registration, user information, token refresh, and logging
+    out.
 
 Classes:
 

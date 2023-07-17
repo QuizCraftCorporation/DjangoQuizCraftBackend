@@ -1,3 +1,10 @@
+"""
+Description: This module contains the serializers for registering new users and retrieving and updating user
+    information.
+
+
+"""
+
 from rest_framework import serializers
 
 from .models import User
