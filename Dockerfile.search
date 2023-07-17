@@ -1,0 +1,19 @@
+FROM python:3.10 as builder
+
+# set the working dir for docker
+WORKDIR /usr/src/search
+
+# set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# install dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends python3-dev
+
+# create venv and install requirements
+RUN pip install --upgrade pip
+COPY /SearchEngine/requirements.txt .
+RUN pip install -r ./requirements.txt
+
+# copy project
+COPY ./SearchEngine .
