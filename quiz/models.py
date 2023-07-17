@@ -13,7 +13,8 @@ from .quiz_evaluation import (
     MCQQuestionBinaryEvaluator,
     TrueFalseQuestionEvaluator,
     OpenEndedQuestionEvaluator,
-    InsertionQuestionEvaluator
+    InsertionQuestionEvaluator,
+    MCQQuestionRationalEvaluator
 )
 
 
@@ -85,18 +86,15 @@ class Quiz(models.Model):
     REQUIRED_FIELDS = ["name"]
 
     def add_questions(self, model_questions):
-        for question in model_questions:
-            q = Question.objects.create(text=question.question_text, type_id=1, quiz=self)
-            correct_options = set(question.right_answers)
-            options = []
-            mcq = MCQQuestion.objects.create(question=q)
-            for option in question.options:
+        for ml_question in model_questions:
+            question = Question.objects.create(text=ml_question.question_text, type_id=1, quiz=self)
+            correct_options = set(ml_question.right_answers)
+            mcq = MCQQuestion.objects.create(question=question)
+            for option in ml_question.options:
                 correct = option in correct_options
-                options.append(MCQOption(text=option, correct=correct, question=mcq))
-            random.shuffle(options)
-            for option in options:
-                option.save()
-                mcq.options.add(option)
+                mcq_option = MCQOption(text=option, correct=correct, question=mcq)
+                mcq_option.save()
+                mcq.options.add(mcq_option)
             mcq.save()
 
     def view(self, user_id):
@@ -262,7 +260,7 @@ class MCQQuestion(AbstractQuestion):
             type[MCQQuestionBinaryEvaluator]: MCQ evaluator
         """
 
-        return MCQQuestionBinaryEvaluator
+        return MCQQuestionRationalEvaluator
 
 
 class TrueFalseQuestion(AbstractQuestion):

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from celery.result import AsyncResult
 from django.core.cache import cache
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Max
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import action, permission_classes
@@ -31,7 +31,7 @@ class QuizViewSet(ViewSet):
         """
         sort = request.query_params.get('sort')
         if sort == 'last_viewed':
-            views = QuizView.objects.filter(viewer_id__exact=request.user.id)
+            views = QuizView.objects.filter(viewer__exact=request.user)
             # Filtering by start and end dates
             start_date = request.query_params.get('start_date')
             end_date = request.query_params.get('end_date')
@@ -39,22 +39,20 @@ class QuizViewSet(ViewSet):
                 views = QuizView.objects.filter(viewed_at__gte=start_date)
             if end_date:
                 views = QuizView.objects.filter(viewed_at__lte=end_date)
-            quizzes = views.order_by('-viewed_at')
+            queryset = views.values_list(  # Get list of quiz ids
+                'quiz_id', flat=True
+            ).annotate(  # Save id from each group with maximal viewed at time
+                latest_viewed_at=Max('viewed_at')
+            ).order_by(  # Order the single quizzes from each group by last viewed time in reversed order
+                '-latest_viewed_at'
+            )
             offset = int(request.query_params.get('offset', 0))
             limit = int(request.query_params.get('limit', 10))
-            queryset = quizzes.values_list('quiz_id', flat=True).distinct()  # Add distinct() to remove duplicates
             queryset = queryset[offset:offset + limit]
             bulk = Quiz.objects.in_bulk(queryset)
-            # result = []
-            # for pk in queryset:
-            #     if not bulk:
-            #         queryset = {}
-            #     if pk in bulk:
-            #         result.append(bulk[pk])
-            #         bulk.pop(pk)
             queryset = [bulk[pk] for pk in queryset]
         else:
-            queryset = request.user.quizzes.all()
+            queryset = Quiz.objects.filter(creator__exact=request.user).order_by('ready', '-created_at')
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -292,7 +290,8 @@ class QuizViewSet(ViewSet):
         try:
             results = SEARCH_DB.search_quiz(search_data,
                                             number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
-        except Exception:
+        except Exception as e:
+            print(e.__str__())
             return JsonResponse(
                 {"detail": "Database is empty."},
                 status=status.HTTP_409_CONFLICT

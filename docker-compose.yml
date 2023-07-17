@@ -27,6 +27,20 @@ services:
     networks:
       - quiz
 
+  search:
+    container_name: search
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile.search
+    command: python3 server.py --address 0.0.0.0 --port 1234
+    depends_on:
+      - backend
+    expose:
+      - 1234
+    networks:
+      - quiz
+
   # Deploy the broker.
   rabbitmq:
     container_name: rabbitmq
@@ -99,7 +113,7 @@ services:
       REDIS_PASSWORD_FILE: /run/secrets/redis_password
     secrets:
       - redis_password
-    command: sh -c "redis-server --requirepass $(cat $$REDIS_PASSWORD_FILE) && echo $(cat $$REDIS_PASSWORD_FILE)"
+    command: sh -c "redis-server --requirepass $$(cat $$REDIS_PASSWORD_FILE) && echo $$(cat $$REDIS_PASSWORD_FILE)"
     expose:
       - 6379
     volumes:

@@ -209,14 +209,13 @@ class QuizSubmissionSerializer(serializers.Serializer):
             basic_question = \
                 Question.objects.get(pk=answer.get("question_id"))
             question = basic_question.get_question_with_type()  # Question with specific type
-            question_answer = question.get_answer()  # Answer on the question
             evaluator_type = question.get_evaluator()  # Evaluator for specific question
-            evaluator = evaluator_type(question_answer)  # Evaluator instance
+            evaluator = evaluator_type(question)  # Evaluator instance
             score = evaluator.evaluate(answer.get("user_answer"))  # Score of the user answer
             total += score  # Adding score to the total score of user in quiz
             answer.update(
                 {
-                    'correct_answer': question_answer,
+                    'correct_answer': question.get_answer(),
                     'score': score
                 }
             )  # Adding score and correct answer to give answer by user
