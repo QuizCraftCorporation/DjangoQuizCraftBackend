@@ -24,7 +24,7 @@ environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-SEARCH_DB = SearchDB(env('SEARCH_DB_PATH', default="nagim_database"))
+SEARCH_DB = SearchDB(env('SEARCH_DB_PATH', default="http://127.0.0.1:1234"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/

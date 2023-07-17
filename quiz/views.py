@@ -32,7 +32,7 @@ class QuizViewSet(ViewSet):
         """
         sort = request.query_params.get('sort')
         if sort == 'last_viewed':
-            views = QuizView.objects.filter(viewer_id__exact=request.user.id)
+            views = QuizView.objects.filter(viewer__exact=request.user)
             # Filtering by start and end dates
             start_date = request.query_params.get('start_date')
             end_date = request.query_params.get('end_date')
@@ -53,7 +53,7 @@ class QuizViewSet(ViewSet):
             bulk = Quiz.objects.in_bulk(queryset)
             queryset = [bulk[pk] for pk in queryset]
         else:
-            queryset = request.user.quizzes.all()
+            queryset = Quiz.objects.filter(creator__exact=request.user).order_by('ready', '-created_at')
         serializer = QuizMeSerializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -291,7 +291,8 @@ class QuizViewSet(ViewSet):
         try:
             results = SEARCH_DB.search_quiz(search_data,
                                             number_of_results=int(env('NUMBER_OF_SEARCH_RESULTS', default=10)))
-        except Exception:
+        except Exception as e:
+            print(e.__str__())
             return JsonResponse(
                 {"detail": "Database is empty."},
                 status=status.HTTP_409_CONFLICT

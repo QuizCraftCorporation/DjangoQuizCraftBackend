@@ -2,3 +2,7 @@
 	path = QuizGeneratorModel
 	url = https://github.com/QuizCraftCorporation/QuizGeneratorModel.git
 	branch = ChatGPT_DiamondEdition
+
+[submodule "SearchEngine"]
+	path = SearchEngine
+	url = https://github.com/QuizCraftCorporation/SearchEngine.git
