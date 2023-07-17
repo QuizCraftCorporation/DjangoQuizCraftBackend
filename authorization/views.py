@@ -17,14 +17,20 @@ from authorization.serializers import UserRegisterSerializer, UserSerializer
 class RegisterView(APIView):
     """
         This view class is used to register new users.
+    """
+    def post(self, request):
+        """
+        Register a new user.
 
         Args:
             request: The HTTP request object with data required for registration.
 
         Returns:
             A JSON response containing the data of the newly created user.
-    """
-    def post(self, request):
+
+        Raises:
+            ValidationError: If the request data is invalid.
+        """
         serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -34,17 +40,24 @@ class RegisterView(APIView):
 class UserInfoView(APIView):
     """
         This view class is used to get the information of the authenticated user.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Gets the information of the authenticated user.
 
         Args:
             request: The HTTP request object.
 
         Returns:
             A JSON response containing the data of the authenticated user.
-    """
 
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
+        Raises:
+            ValidationError: If the request data is invalid.
+            PermissionDenied: If the user is not authenticated.
+       """
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
@@ -53,18 +66,21 @@ class RefreshView(TokenRefreshView):
     """
     This view class is used to refresh the user's token and save it in database. This class is recommended to be
     used when Blacklist After Rotation is required.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        A JSON response containing the new token.
-
-    Todo:
-        fix doubling of tokens in outstanding_tokens database table
     """
 
     def post(self, request, *args, **kwargs):
+        """
+        Refreshes the user's token and saves it in the database.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response containing the new token.
+
+        Todo:
+            fix doubling of tokens in outstanding_tokens database table
+       """
         response = super().post(request, *args, **kwargs)
         refresh_token = response.data['refresh']
         tokens = OutstandingToken.objects.filter(token=request.data['refresh'])
@@ -81,17 +97,24 @@ class RefreshView(TokenRefreshView):
 class LogoutView(APIView):
     """
     This view class is used to log out the user.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        A JSON response with status code 205.
     """
 
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
+        """
+        Logs out the user.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response with status code 205.
+
+        Raises:
+            ValidationError: If the request data is invalid.
+            PermissionDenied: If the user is not authenticated.
+        """
         try:
             serializer = TokenBlacklistSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -105,17 +128,23 @@ class LogoutView(APIView):
 class LogoutAllView(APIView):
     """
     This view class is used to log out all the user's tokens.
-
-    Args:
-        request: The HTTP request object.
-
-    Returns:
-        A JSON response with status code 205.
     """
 
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
+        """
+        Logs out all the user's tokens.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A JSON response with status code 205.
+
+        Raises:
+            PermissionDenied: If the user is not authenticated.
+        """
         tokens = OutstandingToken.objects.filter(user_id=request.user.id)
         for token in tokens:
             t, _ = BlacklistedToken.objects.get_or_create(token=token)
