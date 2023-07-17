@@ -2,7 +2,10 @@
 Description: This module contains the serializers for registering new users and retrieving and updating user
     information.
 
+Serializers:
 
+    UserRegisterSerializer: This serializer is used to serialize the data for registering new users.
+    UserSerializer: This serializer is used to serialize the data for retrieving and updating user information.
 """
 
 from rest_framework import serializers
@@ -55,7 +58,6 @@ class UserSerializer(serializers.ModelSerializer):
         username: The username of the user.
         first_name: The first name of the user.
         last_name: The last name of the user.
-
     """
     class Meta:
         model = User
