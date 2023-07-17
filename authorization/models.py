@@ -1,3 +1,25 @@
+"""
+Description: This module contains the user model and user manager.
+
+Imports:
+
+    django.contrib.auth.base_user: This module provides the BaseUserManager class, which is used to create and manage
+        user objects.
+    django.contrib.auth.validators: This module provides the UnicodeUsernameValidator class, which is used to validate
+        usernames.
+    django.db import models: This module provides the models class, which is used to create and manage database models.
+    django.contrib.auth.models: This module provides the AbstractUser class, which is a base class for user models.
+    django.utils.translation import gettext_lazy as _: This module provides the gettext_lazy function, which is used to
+        lazy-load translations.
+
+Models:
+
+    User: This model represents a user in the system.
+
+Manager:
+
+    UserManager: This manager is used to create and manage user objects.
+"""
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
@@ -55,6 +77,13 @@ class User(AbstractUser):
     A User class
 
     Username and password are required. Other fields are optional.
+
+    Fields:
+        username: The username of the user.
+        password: The password of the user.
+        first_name: The first name of the user.
+        last_name: The last name of the user.
+        id: The id of the user
     """
     username_validator = UnicodeUsernameValidator()
 

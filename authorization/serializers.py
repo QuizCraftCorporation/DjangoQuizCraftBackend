@@ -2,6 +2,12 @@
 Description: This module contains the serializers for registering new users and retrieving and updating user
     information.
 
+Imports:
+
+    rest_framework.serializers: This module provides the serializers class, which is used to serialize and deserialize
+        data.
+    .models import User: This import statement imports the User model from the models.py module.
+
 Serializers:
 
     UserRegisterSerializer: This serializer is used to serialize the data for registering new users.
