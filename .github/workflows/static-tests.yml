@@ -33,6 +33,7 @@ jobs:
           pip install pylint_django
           pip install pylint
           pip install anybadge
+          mkdir -p badges
       - name: Run pylint tests and generate badge
         run: |
           anybadge --value=$(pylint $(git ls-files '*.py') | sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p') --file=badges/pylint.svg pylint
