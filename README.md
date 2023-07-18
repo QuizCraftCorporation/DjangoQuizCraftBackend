@@ -8,7 +8,7 @@
 engaging quizzes from source material. With its seamless management of the entire quiz process, from question generation
 to user quiz-taking and result storage, our backend ensures a smooth and interactive quiz experience.**
 
-![pylint](badges/pylint.svg)
+![pylint](https://github.com/QuizCraftCorporation/DjangoQuizCraftBackend/actions/workflows/static-tests.yml/badge.svg)
 
 ## Table of Contents
 
