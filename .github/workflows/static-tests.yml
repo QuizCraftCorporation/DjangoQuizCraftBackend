@@ -23,5 +23,5 @@ jobs:
       - name: Run pylint tests
         uses: Silleellie/pylint-github-action@v1
         with:
-          package-path: $(git ls-files '*.py')  # lint src package
+          package-path: .  # lint src package
           python-version: 3.10.2
