@@ -32,15 +32,20 @@ jobs:
           pip install -r requirements.txt
           pip install pylint_django
           pip install pylint
-          pip install anybadge
           mkdir -p badges
       - name: Run pylint tests and generate badge
         run: |
-          anybadge --value=$(pylint $(git ls-files '*.py') | sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p') --file=badges/pylint.svg pylint
-      - name: Upload GitHub Badges
-        uses: actions/upload-artifact@v2
+          anybadge --value= --file=badges/pylint.svg pylint
+          echo "ANSWER=$(pylint $(git ls-files '*.py') | sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p')" >> $GITHUB_ENV
+      - name: Create the Badge
+        uses: schneegans/dynamic-badges-action@v1.6.0
         with:
-          name: pylint-badge-artifact
-          path: badges/pylint.svg
-          overwrite: true
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 750b9e58a5be2ae717e3bcc117bf6a7e
+          filename: answer.json
+          label: pylint
+          message: is ${{ env.ANSWER }}
+          valColorRange: ${{ env.ANSWER }}
+          maxColorRange: 10
+          minColorRange: 0
 
