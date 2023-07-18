@@ -30,6 +30,59 @@ from quiz.serializers import (
 from quiz.tasks import create_quiz
 
 
+def list_sort(sort_algorithm, queryset_init, start_date, end_date):
+    """
+    Sorts a list of quizzes based on the specified algorithm.
+
+    Args:
+        sort_algorithm (str): The sorting algorithm to use.
+        queryset_init (QuerySet): The initial queryset of quizzes.
+        start_date (datetime): The start date for the sorting range.
+        end_date (datetime): The end date for the sorting range.
+
+    Returns:
+        QuerySet: The sorted queryset of quizzes.
+    """
+    queryset = queryset_init
+    if sort_algorithm == 'views':
+        ids = queryset.values_list('id', flat=True)
+        views = QuizView.objects.filter(quiz_id__in=ids)
+        if start_date:
+            views = views.filter(viewed_at__gte=start_date)
+        if end_date:
+            views = views.filter(viewed_at__lte=end_date)
+        sorted_views = views.values('quiz_id').annotate(count=Count('quiz_id')).order_by('-count')
+        target_ids = sorted_views.values_list('quiz_id', flat=True)
+        bulk = Quiz.objects.in_bulk(target_ids)
+        queryset = [bulk[pk] for pk in target_ids]  # Sorting by views in descending order
+    elif sort_algorithm == 'unique_views':
+        ids = queryset.values_list('id', flat=True)
+        views = QuizView.objects.filter(quiz_id__in=ids)
+        if start_date:
+            views = views.filter(viewed_at__gte=start_date)
+        if end_date:
+            views = views.filter(viewed_at__lte=end_date)
+        sorted_views = views.values('quiz_id').annotate(
+            count=Count('viewer_id', distinct=True)
+        ).order_by('-count')
+        target_ids = sorted_views.values_list('quiz_id', flat=True).distinct()
+        bulk = Quiz.objects.in_bulk(target_ids)
+        queryset = [bulk[pk] for pk in target_ids]
+    elif sort_algorithm == 'passes':
+        takes = Take.objects.filter(quiz__creator__id__in=queryset.values("id"))
+        if start_date:
+            takes = takes.filter(passage_date__gte=start_date)
+        if end_date:
+            takes = takes.filter(passage_date__lte=end_date)
+        queryset = takes.values('quiz_id').annotate(count=Count('quiz_id')).order_by(
+            '-count')  # Sorting by passes in descending order
+        target_ids = queryset.values_list('quiz_id', flat=True)
+        bulk = Quiz.objects.in_bulk(target_ids)
+        queryset = [bulk[pk] for pk in target_ids]
+    elif sort_algorithm == 'generations':
+        queryset = queryset.filter(ready__exact=True).order_by('-created_at')
+    return queryset
+
 class QuizViewSet(ViewSet):
     """
     View set for working with Quiz model instances in database.
@@ -117,60 +170,7 @@ class QuizViewSet(ViewSet):
 
         # Sorting
         sort_algorithm = request.query_params.get("sort")
-        if sort_algorithm == "views":
-            ids = queryset.values_list("id", flat=True)
-            views = QuizView.objects.filter(quiz_id__in=ids)
-            if start_date:
-                views = views.filter(viewed_at__gte=start_date)
-            if end_date:
-                views = views.filter(viewed_at__lte=end_date)
-            sorted_views = (
-                views.values("quiz_id")
-                .annotate(count=Count("quiz_id"))
-                .order_by("-count")
-            )
-            target_ids = sorted_views.values_list("quiz_id", flat=True)
-            bulk = Quiz.objects.in_bulk(target_ids)
-            queryset = [
-                bulk[pk] for pk in target_ids
-            ]  # Sorting by views in descending order
-        elif sort_algorithm == "unique_views":
-            ids = queryset.values_list("id", flat=True)
-            views = QuizView.objects.filter(quiz_id__in=ids)
-            if start_date:
-                views = views.filter(viewed_at__gte=start_date)
-            if end_date:
-                views = views.filter(viewed_at__lte=end_date)
-            sorted_views = (
-                views.values("quiz_id")
-                .annotate(count=Count("viewer_id", distinct=True))
-                .order_by("-count")
-            )
-            target_ids = sorted_views.values_list(
-                "quiz_id", flat=True
-            ).distinct()
-            bulk = Quiz.objects.in_bulk(target_ids)
-            queryset = [bulk[pk] for pk in target_ids]
-        elif sort_algorithm == "passes":
-            takes = Take.objects.filter(
-                quiz__creator__id__in=queryset.values("id")
-            )
-            if start_date:
-                takes = takes.filter(passage_date__gte=start_date)
-            if end_date:
-                takes = takes.filter(passage_date__lte=end_date)
-            queryset = (
-                takes.values("quiz_id")
-                .annotate(count=Count("quiz_id"))
-                .order_by("-count")
-            )  # Sorting by passes in descending order
-            target_ids = queryset.values_list("quiz_id", flat=True)
-            bulk = Quiz.objects.in_bulk(target_ids)
-            queryset = [bulk[pk] for pk in target_ids]
-        elif sort_algorithm == "generations":
-            queryset = queryset.filter(ready__exact=True).order_by(
-                "-created_at"
-            )
+        queryset = list_sort(sort_algorithm, queryset, start_date, end_date)
 
         # Pagination
         offset = int(request.query_params.get("offset", 0))
