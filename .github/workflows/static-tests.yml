@@ -37,3 +37,13 @@ jobs:
       - name: Run pylint tests and generate badge
         run: |
           anybadge --value=$(pylint $(git ls-files '*.py') | sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p') --file=badges/pylint.svg pylint
+    artifacts:
+    paths:
+      - badges/pylint.svg
+  pages:
+    stage: deploy
+    artifacts:
+      paths:
+        - badges
+    only:
+      - main
