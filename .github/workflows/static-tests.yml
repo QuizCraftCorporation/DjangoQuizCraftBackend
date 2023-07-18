@@ -22,6 +22,6 @@ jobs:
           flake8 $(git ls-files '*.py') --count --max-complexity=10 --max-line-length=79 --exclude=*/migrations/* --statistics
       - name: Run pylint tests
         uses: Silleellie/pylint-github-action@v1
-          with:
-            package-path: $(git ls-files '*.py')  # lint src package
-            python-version: 3.10.2
+        with:
+          package-path: $(git ls-files '*.py')  # lint src package
+          python-version: 3.10.2
