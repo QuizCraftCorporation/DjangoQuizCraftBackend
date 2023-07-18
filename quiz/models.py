@@ -103,6 +103,12 @@ class Quiz(models.Model):
     REQUIRED_FIELDS = ["name"]
 
     def add_questions(self, model_questions):
+        """
+        Add questions to the quiz.
+
+        Args:
+            model_questions: A list of model questions.
+        """
         for ml_question in model_questions:
             question = Question.objects.create(
                 text=ml_question.question_text, type_id=1, quiz=self
@@ -119,6 +125,12 @@ class Quiz(models.Model):
             mcq.save()
 
     def view(self, user_id):
+        """
+        Record that the user has viewed the quiz.
+
+        Args:
+            user_id: The ID of the user.
+        """
         QuizView.objects.create(quiz_id=self.id, viewer_id=user_id)
 
     class Meta:
@@ -127,6 +139,14 @@ class Quiz(models.Model):
 
 
 class QuizView(models.Model):
+    """
+    Model that stores information about users who have viewed a quiz.
+
+    Attributes:
+        quiz: The quiz that the user viewed.
+        viewer: The user who viewed the quiz.
+        viewed_at: The date and time when the user viewed the quiz.
+    """
     quiz = models.ForeignKey(
         Quiz, on_delete=models.CASCADE, related_name="views"
     )
@@ -183,6 +203,12 @@ class Question(models.Model):
         verbose_name_plural = _("questions")
 
     def get_question_with_type(self):
+        """
+        Get question with corresponding type.
+
+        Returns:
+            The question with the corresponding type.
+        """
         if self.type_id == 1:
             return self.mcq_question
         elif self.type_id == 2:
@@ -232,6 +258,15 @@ class AbstractQuestion(models.Model):
 
 
 class MCQOption(models.Model):
+    """
+    Represents an option for a multiple choice question.
+
+    Attributes:
+        text: The text of the option.
+        id: The ID of the option.
+        question: The question that the option belongs to.
+        correct: Whether the option is correct.
+    """
     text = models.CharField(_("option text"), max_length=150)
     id = models.AutoField(_("option id"), primary_key=True)
     question = models.ForeignKey(

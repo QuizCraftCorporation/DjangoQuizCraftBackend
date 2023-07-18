@@ -1,3 +1,12 @@
+"""
+Module for question evaluation.
+
+This module provides question evaluators for different types of questions.
+
+The question evaluators are used to evaluate the user's answers to the questions
+and return the score for the user's answer.
+"""
+
 from abc import ABC, abstractmethod
 
 
