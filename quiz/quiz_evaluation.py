@@ -81,9 +81,11 @@ class MCQQuestionRationalEvaluator(QuestionEvaluator):
             if answer in self.answer:
                 correct_num += 1
         encouragement = correct_num / answer_length if answer_length else 0
-        penalty = (answer_length - correct_num) / \
-                  (options_length - answer_length) \
-            if options_length != answer_length else 0
+        penalty = (
+            (answer_length - correct_num) / (options_length - answer_length)
+            if options_length != answer_length
+            else 0
+        )
         score = encouragement - penalty
         return score if score > 0 else 0
 
@@ -152,5 +154,7 @@ class InsertionQuestionEvaluator(QuestionEvaluator):
             int: The score for the user's answer.
         """
 
-        return int(len(self.answer) == len(user_answer) and
-                   all(self.answer == answer for answer in user_answer))
+        return int(
+            len(self.answer) == len(user_answer)
+            and all(self.answer == answer for answer in user_answer)
+        )

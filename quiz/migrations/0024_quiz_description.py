@@ -6,14 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('quiz', '0023_remove_quiz_description'),
+        ("quiz", "0023_remove_quiz_description"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='quiz',
-            name='description',
-            field=models.TextField(default=''),
+            model_name="quiz",
+            name="description",
+            field=models.TextField(default=""),
             preserve_default=False,
         ),
     ]

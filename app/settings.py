@@ -10,12 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
-import urllib.parse
 from datetime import timedelta
 from pathlib import Path
 
 import environ
-import redis
 
 from app.SearchDB import SearchDB
 
@@ -24,13 +22,13 @@ environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-SEARCH_DB = SearchDB(env('SEARCH_DB_PATH', default="http://127.0.0.1:1234"))
+SEARCH_DB = SearchDB(env("SEARCH_DB_PATH", default="http://127.0.0.1:1234"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(env("DEBUG", default=1))
@@ -39,10 +37,13 @@ ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS", default="").split(" ")
 
 # Celery settings
 # RABBITMQ_PASSWORD_FILE = env("REDIS_PASSWORD_FILE", default=None)
-# RABBITMQ_PASSWORD = open(RABBITMQ_PASSWORD_FILE).read() if RABBITMQ_PASSWORD_FILE else "password"
+# RABBITMQ_PASSWORD = open(RABBITMQ_PASSWORD_FILE).read()
+# if RABBITMQ_PASSWORD_FILE else "password"
 RABBITMQ_PASSWORD = env("RABBITMQ_PASSWORD", default="guest")
 RABBITMQ = {
-    "PROTOCOL": env("RABBITMQ_PROTOCOL", default="amqp"),  # in prod change with "amqps"
+    "PROTOCOL": env(
+        "RABBITMQ_PROTOCOL", default="amqp"
+    ),  # in prod change with "amqps"
     "HOST": env("RABBITMQ_HOST", default="localhost"),
     "PORT": env("RABBITMQ_PORT", default=5672),
     "USER": env("RABBITMQ_USER", default="guest"),
@@ -50,34 +51,40 @@ RABBITMQ = {
 }
 
 REDIS_PASSWORD_FILE = env("REDIS_PASSWORD_FILE", default=None)
-REDIS_PASSWORD = open(REDIS_PASSWORD_FILE).read() if REDIS_PASSWORD_FILE else "password"
+REDIS_PASSWORD = (
+    open(REDIS_PASSWORD_FILE).read() if REDIS_PASSWORD_FILE else "password"
+)
 REDIS = {
     "PROTOCOL": env("REDIS_PROTOCOL", default="redis"),
     "HOST": env("REDIS_HOST", default="localhost"),
     "PORT": env("REDIS_PORT", default=6379),
     "DATABASE": env("REDIS_DATABASE", default=0),
-    "PASSWORD": REDIS_PASSWORD
+    "PASSWORD": REDIS_PASSWORD,
 }
 
 # Redis Django settings
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f"{REDIS['PROTOCOL']}://:{REDIS['PASSWORD']}@{REDIS['HOST']}:" \
-                    f"{REDIS['PORT']}/{REDIS['DATABASE']}",
-
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"{REDIS['PROTOCOL']}://:"
+        f"{REDIS['PASSWORD']}@{REDIS['HOST']}:"
+        f"{REDIS['PORT']}/{REDIS['DATABASE']}",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
     }
 }
 
-CELERY_BROKER_URL = f"{RABBITMQ['PROTOCOL']}://{RABBITMQ['USER']}:" \
-                    f"{RABBITMQ['PASSWORD']}@{RABBITMQ['HOST']}:{RABBITMQ['PORT']}"
+CELERY_BROKER_URL = (
+    f"{RABBITMQ['PROTOCOL']}://{RABBITMQ['USER']}:"
+    f"{RABBITMQ['PASSWORD']}@{RABBITMQ['HOST']}:{RABBITMQ['PORT']}"
+)
 
-CELERY_RESULT_BACKEND = f"{REDIS['PROTOCOL']}://:{REDIS['PASSWORD']}@{REDIS['HOST']}:" \
-                        f"{REDIS['PORT']}/{REDIS['DATABASE']}"
+CELERY_RESULT_BACKEND = (
+    f"{REDIS['PROTOCOL']}://:{REDIS['PASSWORD']}@{REDIS['HOST']}:"
+    f"{REDIS['PORT']}/{REDIS['DATABASE']}"
+)
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -90,12 +97,14 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "authorization",
-    'corsheaders',
+    "corsheaders",
     "quiz",
 ]
 
-CORS_ORIGIN_ALLOW_ALL = bool(env('CORS_ALLOW_ALL', default=1))
-CORS_ALLOWED_ORIGINS = env('CORS_ALLOWED_ORIGINS').split(" ") if not CORS_ORIGIN_ALLOW_ALL else []
+CORS_ORIGIN_ALLOW_ALL = bool(env("CORS_ALLOW_ALL", default=1))
+CORS_ALLOWED_ORIGINS = (
+    env("CORS_ALLOWED_ORIGINS").split(" ") if not CORS_ORIGIN_ALLOW_ALL else []
+)
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -106,20 +115,24 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'corsheaders.middleware.CorsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "app.urls"
 
 # Rest framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
 
 ALGORITHM = env("ALGORITHM", default="RS256")
-SIGNING_KEY = open(env('PRIVATE_KEY_PATH', default='jwtRS256.key')).read() if 'RS' in ALGORITHM else SECRET_KEY
+SIGNING_KEY = (
+    open(env("PRIVATE_KEY_PATH", default="jwtRS256.key")).read()
+    if "RS" in ALGORITHM
+    else SECRET_KEY
+)
 
 # Simple JWT settings
 SIMPLE_JWT = {
@@ -129,7 +142,9 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SIGNING_KEY,
     "VERIFYING_KEY": open(
         f"{env('PRIVATE_KEY_PATH', default='jwtRS256.key')}.pub"
-    ).read() if 'RS' in ALGORITHM else "",
+    ).read()
+    if "RS" in ALGORITHM
+    else "",
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": True,
@@ -158,16 +173,20 @@ WSGI_APPLICATION = "app.wsgi.application"
 
 
 POSTGRES_PASSWORD_FILE = env("POSTGRES_PASSWORD_FILE", default=None)
-POSTGRES_PASSWORD = open(POSTGRES_PASSWORD_FILE).read() if POSTGRES_PASSWORD_FILE else "password"
+POSTGRES_PASSWORD = (
+    open(POSTGRES_PASSWORD_FILE).read()
+    if POSTGRES_PASSWORD_FILE
+    else "password"
+)
 
 DATABASES = {
-    'default': {
-        'ENGINE': env("DB_ENGINE", default="django.db.backends.sqlite3"),
-        'NAME': env("DB_NAME", default=os.path.join(BASE_DIR, "db.sqlite3")),
-        'USER': env("DB_USER", default="user"),
-        'PASSWORD': POSTGRES_PASSWORD,
-        'HOST': env("DB_HOST", default="localhost"),
-        'PORT': env("DB_PORT", default="5432"),
+    "default": {
+        "ENGINE": env("DB_ENGINE", default="django.db.backends.sqlite3"),
+        "NAME": env("DB_NAME", default=os.path.join(BASE_DIR, "db.sqlite3")),
+        "USER": env("DB_USER", default="user"),
+        "PASSWORD": POSTGRES_PASSWORD,
+        "HOST": env("DB_HOST", default="localhost"),
+        "PORT": env("DB_PORT", default="5432"),
     }
 }
 
@@ -179,19 +198,24 @@ AUTH_USER_MODEL = "authorization.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth."
+        "password_validation."
+        "UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth."
+        "password_validation.MinimumLengthValidator",
         "OPTIONS": {
             "min_length": 9,
         },
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth."
+        "password_validation.CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth."
+        "password_validation.NumericPasswordValidator",
     },
 ]
 
