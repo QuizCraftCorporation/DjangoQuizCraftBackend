@@ -31,6 +31,17 @@ from quiz.tasks import create_quiz
 
 
 def sort_by_views(queryset_init, start_date, end_date):
+    """
+    Sorts a queryset of quizzes by the number of views they have received.
+
+    Args:
+        queryset_init: The initial queryset of quizzes.
+        start_date: The start date of the time period to filter by.
+        end_date: The end date of the time period to filter by.
+
+    Returns:
+        A queryset of quizzes sorted by the number of views they have received.
+    """
     queryset = queryset_init
     ids = queryset.values_list("id", flat=True)
     views = QuizView.objects.filter(quiz_id__in=ids)
@@ -52,6 +63,17 @@ def sort_by_views(queryset_init, start_date, end_date):
 
 
 def sort_by_unique_views(queryset_init, start_date, end_date):
+    """
+    Sorts a queryset of quizzes by the number of unique views they have received.
+
+    Args:
+        queryset_init: The initial queryset of quizzes.
+        start_date: The start date of the time period to filter by.
+        end_date: The end date of the time period to filter by.
+
+    Returns:
+        A queryset of quizzes sorted by the number of unique views they have received.
+    """
     queryset = queryset_init
     ids = queryset.values_list("id", flat=True)
     views = QuizView.objects.filter(quiz_id__in=ids)
@@ -73,6 +95,17 @@ def sort_by_unique_views(queryset_init, start_date, end_date):
 
 
 def sort_by_passes(queryset_init, start_date, end_date):
+    """
+    Sorts a queryset of quizzes by the number of passes they have received.
+
+    Args:
+        queryset_init: The initial queryset of quizzes.
+        start_date: The start date of the time period to filter by.
+        end_date: The end date of the time period to filter by.
+
+    Returns:
+        A queryset of quizzes sorted by the number of passes they have received.
+    """
     queryset = queryset_init
     takes = Take.objects.filter(
         quiz__creator__id__in=queryset.values("id")
