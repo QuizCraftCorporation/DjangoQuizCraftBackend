@@ -21,4 +21,4 @@ jobs:
           flake8 $(git ls-files '*.py') --count --max-complexity=10 --max-line-length=79 --exclude=*/migrations/* --statistics
       - name: Run pylint tests
         run: |
-          pylint $(git ls-files '*.py') --rcfile .pylintrc
+          pylint $(git ls-files '*.py')
