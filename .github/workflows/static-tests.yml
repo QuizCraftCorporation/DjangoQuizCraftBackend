@@ -1,8 +1,16 @@
 name: python-linter
 on: [push, pull_request]
 jobs:
-  pylint:
+  linters:
     runs-on: ubuntu-20.04
+    script:
+      - pylint --rcfile=.pylintrc --output-format=text <LIST-OF-FILES-TO-RUN-PYLINT-AGAINST> | tee pylint.txt
+      - score=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint.txt)
+      - echo "Pylint score was $score"
+      - anybadge --value=$score --file=public/pylint.svg pylint
+    artifacts:
+      paths:
+        - public/pylint.svg
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.10.2
@@ -23,3 +31,10 @@ jobs:
       - name: Run pylint tests
         run: |
           pylint $(git ls-files '*.py')
+  pages:
+    stage: deploy
+    artifacts:
+      paths:
+        - public
+#    only:
+#      - main
