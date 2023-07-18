@@ -1,3 +1,6 @@
+"""
+Module for asynchronously creating quizzes from files  .
+"""
 import datetime
 from typing import Union
 
@@ -14,6 +17,24 @@ from quiz.models import Quiz
 @app.task(bind=True)
 def create_quiz(self, file_names: list[str], pk: int, max_questions: Union[int, None] = None,
                 description: Union[str, None] = None):
+    """
+    Create quiz from files.
+    The function first creates a `QuizStreamGenerator` object and uses it to create a `NagimQuiz` object from the files.
+    Then, it adds the questions from the `NagimQuiz` object to the quiz. If a description is provided, it sets the
+    description of the `NagimQuiz` object and the quiz. Finally, it saves the quiz to the database and saves the
+    `NagimQuiz` object to the vector database.
+
+    The function returns the metadata of the generation process.
+
+    Args:
+        file_names: List of file names.
+        pk: Quiz id.
+        max_questions: Max questions.
+        description: Quiz description.
+
+    Returns:
+        Metadata of generation process.
+        """
     quiz = Quiz.objects.get(pk=pk)  # Getting quiz object from database for current quiz id
     quiz_gen = QuizStreamGenerator(debug=False)  # Quiz generator model
     meta = {'current': 0, 'total': 0}  # Meta data of generation process
