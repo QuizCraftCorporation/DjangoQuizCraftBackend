@@ -69,9 +69,9 @@ services:
       dockerfile: Dockerfile
     entrypoint:
       - ./scripts/server-entrypoint.sh
-    command: gunicorn app.wsgi --bind ${DJANGO_HOST?}:${DJANGO_PORT?} --reload --workers 1 --threads 4
+    command: gunicorn app.wsgi --bind :${DJANGO_PORT?} --reload --workers 1 --threads 4
     ports:
-      - ${DJANGO_PORT?}:${DJANGO_PORT?}
+      - 127.0.0.1:${DJANGO_PORT?}:${DJANGO_PORT?}
     restart: always
     depends_on:
       db:
