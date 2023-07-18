@@ -81,53 +81,59 @@ into task identifiers, providing key-value translation for efficient tracking of
 
 ## <a name="installation"></a>Installation
 
-1. **Install Docker and Docker Compose**:
+1. **Clone project with all submodules**
+
+    ```bash
+    git clone --recurse-submodules https://github.com/QuizCraftCorporation/DjangoQuizCraftBackend.git
+    ```
+
+2. **Install Docker and Docker Compose**:
     - Make sure you have Docker and Docker Compose installed on your machine. Refer to the official Docker documentation
       for installation instructions specific to your operating system:
         - [Install Docker](https://docs.docker.com/get-docker/)
         - [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-2. **Prepare Environmental Files**:
+3. **Prepare Environmental Files**:
     - Navigate to the `config` directory and find the `.env*-example` files.
     - Duplicate each `.env*-example` file and rename the copies as `.env.dev*` and `.env.prod*` for development and
       production environments, respectively.
 
-3. **Python Version**:
+4. **Python Version**:
     - Ensure you have Python version 3.10 or higher installed on your system.
 
-4. **RabbitMQ Secret Password**:
+5. **RabbitMQ Secret Password**:
     - Ensure that the RabbitMQ secret password is provided in .env.*.rabbitmq
-5. **Generate Secrets**:
+6. **Generate Secrets**:
     - Run the `secrets_gen.sh` script located in the `scripts` directory to generate secrets for PostgreSQL and Redis:
       ```bash
       bash scripts/secrets_gen.sh
       ```
 
-6. **Generate Django Secret Key**:
+7. **Generate Django Secret Key**:
     - After running the `key_gen.sh` script, a new Django secret key will be generated. For security purposes,
       replace the existing secret key in the `.env.*.django` file with the newly generated one.
 
-7. **Configure DJANGO_ALLOWED_HOSTS**:
+8. **Configure DJANGO_ALLOWED_HOSTS**:
     - Properly configure the `DJANGO_ALLOWED_HOSTS` environment variable in the `.env.dev` or `.env.prod` file,
       depending on the build version (development or production), to include the hostnames that will be used in this
       environment.
 
-8. **Configure Django Host and Port**:
+9. **Configure Django Host and Port**:
     - Set the appropriate host and port for the main Django project in the `.env.dev` or `.env.prod` file, depending on
       the version of the build (development or production).
-9. **Run Docker Compose**:
-    - Open a terminal/command prompt in the project root directory.
-    - To start and build the development version, run the following command:
-      ```bash
-      docker-compose --env-file ./config/.env.dev up -d --build
-      ```
-    - To start and build the production version, run the following command:
-      ```bash
-      docker-compose -f docker-compose.prod.yml --env-file ./config/.env.prod up -d
-      ```
-    - The `-d` flag runs the containers in the background (detached mode).
+10. **Run Docker Compose**:
+     - Open a terminal/command prompt in the project root directory.
+     - To start and build the development version, run the following command:
+       ```bash
+       docker-compose --env-file ./config/.env.dev up -d --build
+       ```
+     - To start and build the production version, run the following command:
+       ```bash
+       docker-compose -f docker-compose.prod.yml --env-file ./config/.env.prod up -d
+       ```
+     - The `-d` flag runs the containers in the background (detached mode).
 
-10. **Access QuizCraft Backend**:
+11. **Access QuizCraft Backend**:
 - Once the containers are up and running, by default you can access QuizCraft Backend by navigating to `http://localhost:8000` in
   your web browser.
 
