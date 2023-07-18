@@ -1,3 +1,8 @@
+"""
+This module contains views for the quiz app.
+
+The views in this module allow users to work with quizzes.
+"""
 import random
 from datetime import datetime
 
@@ -61,6 +66,18 @@ class QuizViewSet(ViewSet):
 
     @action(detail=False, methods=['get'])
     def random(self, request):
+        """
+        This function gets a random quiz for the user.
+
+        Args:
+            request (django.http.HttpRequest): The HTTP request from the user.
+
+        Returns:
+            django.http.JsonResponse: A JSON response with the random quiz.
+
+        Raises:
+            django.http.Http404: If no quizzes are available for the user.
+        """
         queryset = Quiz.objects.filter(
             Q(private__exact=False) |
             Q(creator__exact=request.user.id), ready__exact=True
@@ -192,6 +209,20 @@ class QuizViewSet(ViewSet):
 
     @permission_classes([IsAuthenticatedOrReadOnly])
     def retrieve(self, request, pk=None, **kwargs):
+        """
+        This function retrieves a quiz.
+
+        Args:
+            request (django.http.HttpRequest): The HTTP request from the user.
+            pk (int): The ID of the quiz to retrieve.
+
+        Returns:
+            django.http.JsonResponse: A JSON response with the quiz.
+
+        Raises:
+            django.http.Http403: If the quiz is private and the user does not have permission to view it.
+            django.http.Http425: If the quiz is not ready yet.
+        """
         answer = True if request.query_params.get('answer') else False
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
@@ -220,6 +251,15 @@ class QuizViewSet(ViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
     def check_generation(self, request):
+        """
+        This function checks if there are any quizzes that are generating for the user.
+
+        Args:
+            request (django.http.HttpRequest): The HTTP request from the user.
+
+        Returns:
+            django.http.JsonResponse: A JSON response with the status of the quizzes.
+        """
         not_ready_quizzes = request.user.quizzes.filter(ready__exact=False)
         if not_ready_quizzes:
             return JsonResponse(
@@ -234,6 +274,20 @@ class QuizViewSet(ViewSet):
 
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticatedOrReadOnly])
     def check_progress(self, request, pk=None):
+        """
+        This function checks the progress of a quiz generation.
+
+        Args:
+            request (django.http.HttpRequest): The HTTP request from the user.
+            pk (int): The ID of the quiz.
+
+        Returns:
+            django.http.JsonResponse: A JSON response with the progress of the quiz generation.
+
+        Raises:
+            django.http.Http404: If the quiz does not exist.
+            django.http.Http403: If the user does not have permission to access the quiz.
+        """
         if pk:
             quiz = Quiz.objects.filter(pk=pk).first()
             if not quiz:
@@ -287,6 +341,15 @@ class QuizViewSet(ViewSet):
 
     @action(detail=False, methods=['get'])
     def search(self, request):
+        """
+        This function searches for quizzes in the database.
+
+        Args:
+            request (django.http.HttpRequest): The HTTP request from the user.
+
+        Returns:
+            django.http.JsonResponse: A JSON response with the list of quizzes that match the search criteria.
+        """
         search_data = request.query_params.get('data')
         if not search_data:
             return JsonResponse({"detail": "You have no text to search with."},
@@ -310,6 +373,16 @@ class QuizViewSet(ViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def attempt(self, request, pk=None):
+        """
+        This function attempts a quiz.
+
+        Args:
+            request (django.http.HttpRequest): The HTTP request from the user.
+            pk (int): The ID of the quiz.
+
+        Returns:
+            django.http.JsonResponse: A JSON response with the result of the quiz attempt.
+        """
         quiz = get_object_or_404(Quiz, pk=pk)
         serializer = QuizSubmissionSerializer(data=self.request.data, context={'user': request.user, 'quiz': quiz})
         serializer.is_valid(raise_exception=True)
