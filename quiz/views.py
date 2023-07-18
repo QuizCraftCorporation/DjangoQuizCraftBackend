@@ -64,7 +64,8 @@ def sort_by_views(queryset_init, start_date, end_date):
 
 def sort_by_unique_views(queryset_init, start_date, end_date):
     """
-    Sorts a queryset of quizzes by the number of unique views they have received.
+    Sorts a queryset of quizzes by the number of unique views they
+    have received.
 
     Args:
         queryset_init: The initial queryset of quizzes.
@@ -72,7 +73,8 @@ def sort_by_unique_views(queryset_init, start_date, end_date):
         end_date: The end date of the time period to filter by.
 
     Returns:
-        A queryset of quizzes sorted by the number of unique views they have received.
+        A queryset of quizzes sorted by the number of unique
+        views they have received.
     """
     queryset = queryset_init
     ids = queryset.values_list("id", flat=True)
@@ -104,7 +106,8 @@ def sort_by_passes(queryset_init, start_date, end_date):
         end_date: The end date of the time period to filter by.
 
     Returns:
-        A queryset of quizzes sorted by the number of passes they have received.
+        A queryset of quizzes sorted by the number of
+        passes they have received.
     """
     queryset = queryset_init
     takes = Take.objects.filter(
