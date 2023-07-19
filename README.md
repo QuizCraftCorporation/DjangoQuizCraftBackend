@@ -9,7 +9,8 @@ engaging quizzes from source material. With its seamless management of the entir
 to user quiz-taking and result storage, our backend ensures a smooth and interactive quiz experience.**
 
 ![linters](https://github.com/QuizCraftCorporation/DjangoQuizCraftBackend/actions/workflows/static-tests.yml/badge.svg)
-![pylint](https://github.com/QuizCraftCorporation/DjangoQuizCraftBackend/tree/main/badges/pylint.svg)
+
+[//]: # (![pylint]&#40;https://github.com/QuizCraftCorporation/DjangoQuizCraftBackend/tree/main/badges/pylint.svg&#41;)
 
 ## Table of Contents
 
