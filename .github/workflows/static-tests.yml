@@ -34,5 +34,23 @@ jobs:
           pip install pylint
       - name: Run pylint test
         run: |
-          pylint $(git ls-files '*.py')
+          pylint $(git ls-files '*.py') | tee result.txt
+  generate_badge:
+    runs-on: ubuntu-20.04
+    if: github.ref == 'refs/heads/main'
+    needs: pylint
+      - name: Build badge
+        run: | 
+          mkdir -p badges
+          anybadge --value=$(cat result.txt | sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p')) --file=badges/pylint.svg pylint
+      - name: Deploy badge
+        uses: peaceiris/actions-gh-pages@v3
+          with:
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            publish_dir: ./public
+            publish_branch: main
+
+
+      
+          
 
