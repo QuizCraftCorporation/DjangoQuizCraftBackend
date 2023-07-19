@@ -3,13 +3,23 @@ Description: This module contains the user model and user manager.
 
 Imports:
 
-    django.contrib.auth.base_user: This module provides the BaseUserManager class, which is used to create and manage
+    django.contrib.auth.base_user: This module provides t
+    he BaseUserManager class,
+    which is used to create and manage
         user objects.
-    django.contrib.auth.validators: This module provides the UnicodeUsernameValidator class, which is used to validate
+    django.contrib.auth.validators: This module provides
+    the UnicodeUsernameValidator
+    class, which is used to validate
         usernames.
-    django.db import models: This module provides the models class, which is used to create and manage database models.
-    django.contrib.auth.models: This module provides the AbstractUser class, which is a base class for user models.
-    django.utils.translation import gettext_lazy as _: This module provides the gettext_lazy function, which is used to
+    django.db import models: This module provides the
+    models class, which is used to
+    create and manage database models.
+    django.contrib.auth.models: This module provides the
+    AbstractUser class, which is
+    a base class for user models.
+    django.utils.translation import gettext_lazy as _:
+    This module provides the
+    gettext_lazy function, which is used to
         lazy-load translations.
 
 Models:
@@ -28,7 +38,6 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UserManager(BaseUserManager):
-
     use_in_migration = True
 
     def create_user(self, username, password=None, **extra_fields):
@@ -37,7 +46,8 @@ class UserManager(BaseUserManager):
 
         Args:
             username (str): The username of the user
-            password (:obj:`str`, optional): The password of the user. Defaults to None.
+            password (:obj:`str`, optional): The password of the user.
+            Defaults to None.
             **extra_fields: Extra information fields of the user.
         Return:
             authorization.models.User: The newly created user object.
@@ -51,7 +61,8 @@ class UserManager(BaseUserManager):
 
     def create_superuser(self, username, password, **extra_fields):
         """
-        Creates and saves a superuser with the given username, email and password.
+        Creates and saves a superuser with the given
+        username, email and password.
 
         Args:
             username (str): The username of the user
@@ -60,9 +71,9 @@ class UserManager(BaseUserManager):
         Return:
             The newly created user object.
         """
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff = True")

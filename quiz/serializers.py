@@ -29,6 +29,7 @@ class QuizCreateSerializer(serializers.Serializer):
         description: The description of the quiz.
         private: Whether the quiz is private.
     """
+
     quiz_name = serializers.CharField()
     source_name = serializers.CharField()
     max_questions = serializers.IntegerField(required=False)
@@ -59,6 +60,7 @@ class GetQuizSerializer(serializers.Serializer):
     Attributes:
         quiz_id (IntegerField): The ID of the quiz to get.
     """
+
     quiz_id = serializers.IntegerField()
 
     def validate_quiz_id(self, value):
@@ -90,6 +92,7 @@ class QuizSerializer(serializers.ModelSerializer):
         description: The description of the quiz.
         private: Whether the quiz is private.
     """
+
     questions = serializers.SerializerMethodField()
     title = serializers.SerializerMethodField()
     description = serializers.CharField()
@@ -107,7 +110,8 @@ class QuizSerializer(serializers.ModelSerializer):
             obj: The quiz we are getting questions from
 
         Returns:
-            List of the questions in the quiz, serialized as `MCQQuestionSerializer` objects.
+            List of the questions in the quiz, serialized
+            as `MCQQuestionSerializer` objects.
         """
         all_questions = obj.question_set.all()
         questions = [
@@ -133,6 +137,7 @@ class QuizMeSerializer(serializers.ModelSerializer):
     """
     Serializer for personal quizzes.
     """
+
     class Meta:
         model = Quiz
         fields = ["id", "name", "ready", "description"]
@@ -142,6 +147,7 @@ class QuizAnswersSerializer(QuizSerializer):
     """
     Serializer for a quiz with answers.
     """
+
     def get_questions(self, obj: Quiz):
         """
         Gets questions of the quiz.
@@ -164,6 +170,7 @@ class MCQQuestionOptionSerializer(serializers.ModelSerializer):
     """
     Serializer for a multiple choice question option.
     """
+
     class Meta:
         model = MCQOption
         fields = ["id", "text"]
@@ -173,6 +180,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     """
     Serializer for a question.
     """
+
     class Meta:
         model = Question
         fields = ["id", "text"]
@@ -182,6 +190,7 @@ class MCQQuestionSerializer(serializers.ModelSerializer):
     """
     Serializer for a multiple choice question.
     """
+
     options = serializers.SerializerMethodField()
     question = QuestionSerializer(read_only=True)
 
@@ -213,6 +222,7 @@ class MCQQuestionAnswersSerializer(MCQQuestionSerializer):
     """
     Serializer for a multiple choice question with answers.
     """
+
     answers = serializers.SerializerMethodField()
 
     class Meta:
@@ -244,6 +254,7 @@ class MCQUserAnswerSerializer(serializers.Serializer):
         question_id (IntegerField): The ID of the question.
         user_answer (ListField): The list of IDs of the chosen options.
     """
+
     # Serializer for answer on a question
     question_id = serializers.IntegerField()
     user_answer = serializers.ListField(child=serializers.IntegerField())
@@ -324,6 +335,7 @@ class AnswerWithScoreSerializer(serializers.Serializer):
         question_id (IntegerField): The ID of the question.
         score (FloatField): The score of ths user for given question.
     """
+
     question_id = serializers.IntegerField()
     score = serializers.FloatField()
 
@@ -336,6 +348,7 @@ class MCQAnswerWithScoreSerializer(AnswerWithScoreSerializer):
         user_answer (ListField): The list of ids of options chosen by the user.
         correct_answer (ListField): The list of ids of correct options.
     """
+
     user_answer = serializers.ListField(child=serializers.IntegerField())
     correct_answer = serializers.ListField(child=serializers.IntegerField())
 
@@ -348,6 +361,7 @@ class TrueFalseAnswerWithScoreSerializer(AnswerWithScoreSerializer):
         user_answer (BooleanField): The option chosen by the user.
         correct_answer (BooleanField): The option of the correct option.
     """
+
     user_answer = serializers.BooleanField()
     correct_answer = serializers.BooleanField()
 
@@ -372,8 +386,9 @@ def get_scored_answer_serializer(question):
 
 class QuizResultSerializer(serializers.Serializer):
     """
-     Serializer for quiz results.
-     """
+    Serializer for quiz results.
+    """
+
     scored_answers = serializers.SerializerMethodField()
     total_score = serializers.FloatField()
     quiz_id = serializers.IntegerField()
@@ -407,6 +422,7 @@ class QuizSubmissionSerializer(serializers.Serializer):
     """
     Serializer for quiz submissions.
     """
+
     # Serializer for quiz answers including multiple
     # questions
     answers = MCQUserAnswerSerializer(many=True)
@@ -419,7 +435,8 @@ class QuizSubmissionSerializer(serializers.Serializer):
           validated_data (dict): The validated data from the serializer.
 
         Returns:
-          A dictionary with information about quiz submission (scored answers, quiz id, total score).
+          A dictionary with information about quiz submission
+            (scored answers, quiz id, total score).
         """
         user = self.context.get("user")
         quiz = self.context.get("quiz")

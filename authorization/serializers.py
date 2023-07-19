@@ -1,17 +1,20 @@
 """
-Description: This module contains the serializers for registering new users and retrieving and updating user
-    information.
+Description: This module contains the serializers for registering
+    new users and retrieving and updating user information.
 
 Imports:
 
-    rest_framework.serializers: This module provides the serializers class, which is used to serialize and deserialize
-        data.
-    .models import User: This import statement imports the User model from the models.py module.
+    rest_framework.serializers: This module provides the serializers class,
+    which is used to serialize and deserialize data.
+    .models import User: This import statement imports
+    the User model from the models.py module.
 
 Serializers:
 
-    UserRegisterSerializer: This serializer is used to serialize the data for registering new users.
-    UserSerializer: This serializer is used to serialize the data for retrieving and updating user information.
+    UserRegisterSerializer: This serializer is used to serialize the data
+    for registering new users.
+    UserSerializer: This serializer is used to serialize the data
+    for retrieving and updating user information.
 """
 
 from rest_framework import serializers
@@ -30,6 +33,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         first_name: The first name of the user.
         last_name: The last name of the user.
     """
+
     class Meta:
         model = User
         fields = ["id", "username", "password", "first_name", "last_name"]
@@ -40,16 +44,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         Create a new user and save it to the database.
 
         Args:
-            validated_data (dict): The data that was validated by the serializer.
+            validated_data (dict): The data that was validated by the
+            serializer.
 
         Returns:
             authorization.models.User: The newly created user object.
         """
         print(type(validated_data))
-        user = User.objects.create(
-            **validated_data
-        )
-        user.set_password(validated_data['password'])
+        user = User.objects.create(**validated_data)
+        user.set_password(validated_data["password"])
         user.save()
         print(type(user))
         return user
@@ -65,6 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
         first_name: The first name of the user.
         last_name: The last name of the user.
     """
+
     class Meta:
         model = User
         exclude = [

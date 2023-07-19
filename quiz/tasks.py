@@ -23,9 +23,12 @@ def create_quiz(
 ):
     """
     Create quiz from files.
-    The function first creates a `QuizStreamGenerator` object and uses it to create a `NagimQuiz` object from the files.
-    Then, it adds the questions from the `NagimQuiz` object to the quiz. If a description is provided, it sets the
-    description of the `NagimQuiz` object and the quiz. Finally, it saves the quiz to the database and saves the
+    The function first creates a `QuizStreamGenerator` object and uses
+        it to create a `NagimQuiz` object from the files.
+    Then, it adds the questions from the `NagimQuiz` object to the quiz.
+        If a description is provided, it sets the
+    description of the `NagimQuiz` object and the quiz. Finally,
+        it saves the quiz to the database and saves the
     `NagimQuiz` object to the vector database.
 
     The function returns the metadata of the generation process.
@@ -38,7 +41,7 @@ def create_quiz(
 
     Returns:
         Metadata of generation process.
-        """
+    """
     quiz = Quiz.objects.get(
         pk=pk
     )  # Getting quiz object from database for current quiz id

@@ -147,6 +147,7 @@ class QuizView(models.Model):
         viewer: The user who viewed the quiz.
         viewed_at: The date and time when the user viewed the quiz.
     """
+
     quiz = models.ForeignKey(
         Quiz, on_delete=models.CASCADE, related_name="views"
     )
@@ -267,6 +268,7 @@ class MCQOption(models.Model):
         question: The question that the option belongs to.
         correct: Whether the option is correct.
     """
+
     text = models.CharField(_("option text"), max_length=150)
     id = models.AutoField(_("option id"), primary_key=True)
     question = models.ForeignKey(

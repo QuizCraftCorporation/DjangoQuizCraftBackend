@@ -93,9 +93,7 @@ def sort_by_unique_views(queryset_init, start_date, end_date):
         .annotate(count=Count("viewer_id", distinct=True))
         .order_by("-count")
     )
-    target_ids = sorted_views.values_list(
-        "quiz_id", flat=True
-    ).distinct()
+    target_ids = sorted_views.values_list("quiz_id", flat=True).distinct()
     bulk = Quiz.objects.in_bulk(target_ids)
     queryset = [bulk[pk] for pk in target_ids]
     return queryset
@@ -115,9 +113,7 @@ def sort_by_passes(queryset_init, start_date, end_date):
         passes they have received.
     """
     queryset = queryset_init
-    takes = Take.objects.filter(
-        quiz__creator__id__in=queryset.values("id")
-    )
+    takes = Take.objects.filter(quiz__creator__id__in=queryset.values("id"))
     if start_date:
         takes = takes.filter(passage_date__gte=start_date)
     if end_date:
@@ -312,10 +308,11 @@ class QuizViewSet(ViewSet):
             django.http.JsonResponse: A JSON response with the quiz.
 
         Raises:
-            django.http.Http403: If the quiz is private and the user does not have permission to view it.
+            django.http.Http403: If the quiz is private and the
+                user does not have permission to view it.
             django.http.Http425: If the quiz is not ready yet.
         """
-        answer = True if request.query_params.get('answer') else False
+        answer = True if request.query_params.get("answer") else False
         get_quiz_serializer = GetQuizSerializer(data={"quiz_id": pk})
         get_quiz_serializer.is_valid(raise_exception=True)
         quiz = Quiz.objects.filter(pk=pk).first()
@@ -352,13 +349,15 @@ class QuizViewSet(ViewSet):
     )
     def check_generation(self, request):
         """
-        This function checks if there are any quizzes that are generating for the user.
+        This function checks if there are any quizzes that
+            are generating for the user.
 
         Args:
             request (django.http.HttpRequest): The HTTP request from the user.
 
         Returns:
-            django.http.JsonResponse: A JSON response with the status of the quizzes.
+            django.http.JsonResponse: A JSON response with the
+                status of the quizzes.
         """
         not_ready_quizzes = request.user.quizzes.filter(ready__exact=False)
         if not_ready_quizzes:
@@ -390,11 +389,13 @@ class QuizViewSet(ViewSet):
             pk (int): The ID of the quiz.
 
         Returns:
-            django.http.JsonResponse: A JSON response with the progress of the quiz generation.
+            django.http.JsonResponse: A JSON response with the progress
+                of the quiz generation.
 
         Raises:
             django.http.Http404: If the quiz does not exist.
-            django.http.Http403: If the user does not have permission to access the quiz.
+            django.http.Http403: If the user does not have permission to
+                access the quiz.
         """
         if pk:
             quiz = Quiz.objects.filter(pk=pk).first()
@@ -449,9 +450,10 @@ class QuizViewSet(ViewSet):
             request (django.http.HttpRequest): The HTTP request from the user.
 
         Returns:
-            django.http.JsonResponse: A JSON response with the list of quizzes that match the search criteria.
+            django.http.JsonResponse: A JSON response with the list of
+                quizzes that match the search criteria.
         """
-        search_data = request.query_params.get('data')
+        search_data = request.query_params.get("data")
 
         if not search_data:
             return JsonResponse(
@@ -491,7 +493,8 @@ class QuizViewSet(ViewSet):
             pk (int): The ID of the quiz.
 
         Returns:
-            django.http.JsonResponse: A JSON response with the result of the quiz attempt.
+            django.http.JsonResponse: A JSON response with the result of
+                the quiz attempt.
         """
         quiz = get_object_or_404(Quiz, pk=pk)
         serializer = QuizSubmissionSerializer(
