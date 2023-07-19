@@ -167,7 +167,7 @@ requests. With our API, you can seamlessly generate quizzes, manage user respons
 To get started, refer to our comprehensive API documentation on Postman. Click on the Postman logo below to access the
 documentation:
 
-[![Postman Documentation](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)](https://app.getpostman.com/join-team?invite_code=ee9ea33d88603fe51e6e3320407c78e2&target_code=c481c4d148291fdf8c047dc99899bc38)
+[![Postman Documentation](https://img.shields.io/badge/Postman-FF6C37?style=for-the-badge&logo=postman&logoColor=white)](https://www.postman.com/lunar-crescent-398747/workspace/quizcraft)
 
 The Postman collection includes details about each API endpoint, required parameters, authentication methods, response
 formats, and example requests. You can experiment with the API right from the documentation, allowing for easy
