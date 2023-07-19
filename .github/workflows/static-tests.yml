@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: github.ref == 'refs/heads/main'
     needs: pylint
+    steps:
       - name: Build badge
         run: | 
           mkdir -p badges
