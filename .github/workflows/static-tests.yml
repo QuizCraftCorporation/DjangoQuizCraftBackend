@@ -46,10 +46,10 @@ jobs:
           anybadge --value=$(cat result.txt | sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p')) --file=badges/pylint.svg pylint
       - name: Deploy badge
         uses: peaceiris/actions-gh-pages@v3
-          with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
-            publish_dir: ./public
-            publish_branch: main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: main
 
 
       
